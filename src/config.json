@@ -3,7 +3,9 @@
       "baseCurrency": "USDT",
       "maxOpenPositions": 5,
       "orderType": "market",
-      "marketType": "perpetual",
+      "marketType": "future",
+      "contractType": "PERPETUAL",
+      
       "riskManagement": {
         "maxRiskPerTrade": 2.5,
         "maxDailyLossPercent": 10

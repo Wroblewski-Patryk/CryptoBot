@@ -70,10 +70,10 @@ const setConfig = (key, value) => {
 
 // Dynamiczne śledzenie zmian w config.json
 const watchConfigChanges = () => {
-    fs.watch(CONFIG_FILE, (event) => {
+    fs.watch(CONFIG_FILE, async (event) => {
         if (event === 'change') {
-            logMessage('info', '♻️ Detekcja zmiany w config.json, przeładowanie...')
-            loadConfig();
+            console.log('♻️ Config file changed, reloading...');
+            loadConfig(); // ✅ Teraz obsługuje async poprawnie
         }
     });
 };
