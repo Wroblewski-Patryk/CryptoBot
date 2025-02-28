@@ -1,0 +1,33 @@
+{
+    "trading": {
+      "baseCurrency": "USDT",
+      "maxOpenPositions": 5,
+      "orderType": "market",
+      "marketType": "perpetual",
+      "riskManagement": {
+        "maxRiskPerTrade": 2.5,
+        "maxDailyLossPercent": 10
+      }
+    },
+    "dca": {
+      "enabled": true,
+      "dcaPercent": -20,
+      "dcaTimes": 2,
+      "dcaMultiplier": 1.1
+    },
+    "trailingStop": {
+      "enabled": true,
+      "trailingStopStart": 5,
+      "trailingStopStep": 2.5
+    },
+    "indicators": {
+      "enabled": true,
+      "interval": "15m",
+      "rsi": {
+        "enabled": true,
+        "overbought": 70,
+        "oversold": 30,
+        "period": 14
+      }
+    }
+  }
