@@ -5,6 +5,7 @@
       "orderType": "market",
       "marketType": "future",
       "contractType": "PERPETUAL",
+      "interval": "15m",
       
       "riskManagement": {
         "maxRiskPerTrade": 2.5,

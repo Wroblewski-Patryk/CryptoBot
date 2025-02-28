@@ -1,6 +1,8 @@
 const { getInstance } = require('../../api/binance.service');
 const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
+const { updateMarketCache } = require('./cache.service');
+const { updateOHLCV } = require('./ohlcv.service');
 
 let cachedMarkets = [];
 let lastUpdate = 0;
@@ -31,6 +33,10 @@ const initMarkets = async () => {
 
         lastUpdate = Date.now();
         logMessage('info', `📊 Markets updated successfully (${cachedMarkets.length} pairs).`);
+
+        await updateOHLCV(cachedMarkets);
+        await updateMarketCache(cachedMarkets);
+        
         return cachedMarkets;
     } catch (error) {
         logMessage('error', `❌ Error fetching markets: ${error.message}`);
