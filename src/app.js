@@ -1,6 +1,6 @@
 require('./core/errorHandler');
 const bot = require('./core/bot');
-const { logMessage } = require('./modules/logging/logging.service');
+const { logMessage } = require('./core/logging');
 
 const link = "https://localhost";
 const port = 3000;

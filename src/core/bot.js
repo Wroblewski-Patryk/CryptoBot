@@ -1,7 +1,10 @@
 const express = require('express');
 const errorMiddleware = require('./errorMiddleware'); // PO DODANIU GUI
-const { logMessage } = require('../modules/logging/logging.service');
+const { logMessage } = require('./logging');
+const { startEventLoops } = require('./eventLoop');
+
 const { initInstance } = require('../api/binance.service');
+
 const { initMarkets } = require('../modules/markets/markets.service');
 const { initWallet } = require('../modules/wallet/wallet.service');
 const { initPositions } = require('../modules/positions/positions.service');
@@ -17,6 +20,8 @@ async function initialize() {
     await initMarkets();
     await initWallet();
     await initPositions();
+
+    startEventLoops();
 }
 
 initialize();

@@ -1,4 +1,4 @@
-const { logMessage } = require('../modules/logging/logging.service');
+const { logMessage } = require('./logging');
 
 const errorMiddleware = (err, req, res, next) => {
     logMessage('error', `🚨 API Error: ${err.message}`);

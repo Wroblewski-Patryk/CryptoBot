@@ -1,5 +1,5 @@
 const { getInstance } = require('../../api/binance.service');
-const { logMessage } = require('../logging/logging.service');
+const { logMessage } = require('../../core/logging');
 
 let cachedPositions = [];
 let lastUpdate = 0;

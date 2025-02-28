@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 
-const { logMessage } = require('../modules/logging/logging.service');
+const { logMessage } = require('../core/logging');
 
 // Ścieżki do plików konfiguracyjnych
 const ENV_FILE = path.resolve(__dirname, '../.env');

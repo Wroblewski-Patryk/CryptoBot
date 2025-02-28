@@ -4,7 +4,7 @@ const moment = require('moment');
 const chalk = require('chalk');
 
 // 📂 Ścieżka do pliku logów
-const LOG_FILE = path.join(__dirname, '../../logs/app.log');
+const LOG_FILE = path.join(__dirname, '../logs/app.log');
 
 // 📌 Funkcja do formatowania czasu
 const getTimestamp = () => {

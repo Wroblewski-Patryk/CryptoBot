@@ -1,4 +1,4 @@
-const { logMessage } = require('../modules/logging/logging.service');
+const { logMessage } = require('./logging');
 
 process.on('uncaughtException', (error) => {
     logMessage('error', `🔥 Uncaught Exception: ${error.stack || error.message}`);

@@ -1,6 +1,6 @@
 const { getInstance } = require('../../api/binance.service');
 const { getConfig } = require('../../config/config');
-const { logMessage } = require('../logging/logging.service');
+const { logMessage } = require('../../core/logging');
 
 let cachedMarkets = [];
 let lastUpdate = 0;
