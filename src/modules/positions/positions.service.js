@@ -1,5 +1,6 @@
 const { getInstance } = require('../../api/binance.service');
 const { logMessage } = require('../../core/logging');
+const chalk = require('chalk');
 
 let cachedPositions = [];
 let lastUpdate = 0;
@@ -24,6 +25,8 @@ const initPositions = async () => {
 
         lastUpdate = Date.now();
         logMessage('info', `📊 Positions updated successfully (${cachedPositions.length} open positions).`);
+        
+        showPositions();
         return cachedPositions;
     } catch (error) {
         logMessage('error', `❌ Error fetching positions: ${error.message}`);
@@ -46,6 +49,33 @@ const updatePositions = async () => {
     await initPositions();
 };
 
+const showPositions = () => {
+    logMessage('debug', '💰 Lista pozycji');
+    for (const position of cachedPositions){
+        const symbol = position.symbol;
+        const margin = position.margin;
+        const profit = position.profit
+        const amount = position.amount;
+        const side = position.side;
+
+        const symbolFormated = symbol.replace(/\/.*/, '');
+        const marginFormated = margin.toFixed(2) + '💲';
+        const profitPercent = (profit/margin*100);
+        const sideFormated = side.toUpperCase();
+        const symbolUp = "📈";
+        const symbolDown = "📉";
+        const sideSymbol = side === 'short' ? symbolDown : symbolUp;
+
+        let sideLog = '[' + sideSymbol + ' ' + sideFormated + ']';
+        sideLog = side === 'short' ? chalk.red(sideLog) : chalk.green(sideLog);
+        const symbolLog = symbolFormated;
+        const marginLog = chalk.white('Margin: ' + marginFormated);
+        let profitLog = 'Profit: ' + profitPercent.toFixed(2)+'%';
+        profitLog = profitPercent > 0 ? chalk.green(profitLog) : chalk.red(profitLog);
+
+        logMessage('debug', `${sideLog} ${symbolLog} - ${profitLog} - ${marginLog}`);
+    }
+}
 module.exports = {
     initPositions,
     getPositions,

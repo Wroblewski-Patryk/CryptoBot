@@ -9,7 +9,7 @@ const CACHE_EXPIRATION = 60000; // 1 minuta cache
 const fetchOHLCV = async (symbol) => {
     try {
         const binance = await getInstance();
-        const interval = getConfig('trading.interval') || '15m';
+        const interval = getConfig('indicators.interval');
 
         // Sprawdzenie cache, aby unikać nadmiarowych zapytań
         const cacheKey = `${symbol}-${interval}`;
@@ -32,24 +32,6 @@ const fetchOHLCV = async (symbol) => {
     }
 };
 
-// Funkcja pobierająca OHLCV dla wielu par jednocześnie
-const fetchMultipleOHLCV = async (symbols) => {
-    const results = {};
-    for (const symbol of symbols) {
-        results[symbol] = await fetchOHLCV(symbol);
-    }
-    return results;
-};
-
-const updateOHLCV = async (markets) => {
-    const symbols = markets.map(market => market.symbol);
-    await fetchMultipleOHLCV(symbols);
-    logMessage('info', `📊 Fetching OHLCV data completed`);
-    return;
-}
-
 module.exports = {
-    fetchOHLCV,
-    fetchMultipleOHLCV,
-    updateOHLCV
+    fetchOHLCV
 };

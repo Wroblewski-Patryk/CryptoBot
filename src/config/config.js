@@ -27,7 +27,6 @@ const loadConfig = () => {
         }
     } catch (error) {
         logMessage('error', '❌ Błąd podczas ładowania config.json:'+error )
-        console.error();
         globalConfig = {};
     }
 };

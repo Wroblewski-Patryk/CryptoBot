@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
 const chalk = require('chalk');
+//const { getConfig } = require('../config/config');
 
 // 📂 Ścieżka do pliku logów
 const LOG_FILE = path.join(__dirname, '../logs/app.log');
@@ -25,7 +26,10 @@ const logMessage = (level, message) => {
     const logEntry = `[${timestamp}] ${logType.icon} ${logLevel.toUpperCase()} ${message}`;
 
     // 🖥️ Logowanie do konsoli
-    console.log(logType.color(logEntry));
+    const logLevelConfig = 'debug';
+    if (logLevelConfig === logLevel)
+        console.log(logType.color(logEntry));
+
 
     // 📁 Zapis do pliku
     fs.appendFileSync(LOG_FILE, logEntry + '\n', 'utf8');

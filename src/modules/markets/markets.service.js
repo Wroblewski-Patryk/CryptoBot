@@ -1,8 +1,8 @@
 const { getInstance } = require('../../api/binance.service');
 const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
+
 const { updateMarketCache } = require('./cache.service');
-const { updateOHLCV } = require('./ohlcv.service');
 
 let cachedMarkets = [];
 let lastUpdate = 0;
@@ -20,7 +20,9 @@ const initMarkets = async () => {
         // Filtrowanie rynków
         const filteredMarkets = Object.values(markets).filter(market =>
             market.quote === baseCurrency &&
-            market.info.contractType === contractType
+            market.info.contractType === contractType &&
+            market.base !== 'USDC' &&
+            market.base !== 'FDUSD'
         );
         cachedMarkets = filteredMarkets.map(market => ({
             symbol: market.symbol,
@@ -30,13 +32,11 @@ const initMarkets = async () => {
             precision: market.precision,
             limits: market.limits
         }));
-
+        
         lastUpdate = Date.now();
         logMessage('info', `📊 Markets updated successfully (${cachedMarkets.length} pairs).`);
 
-        await updateOHLCV(cachedMarkets);
         await updateMarketCache(cachedMarkets);
-        
         return cachedMarkets;
     } catch (error) {
         logMessage('error', `❌ Error fetching markets: ${error.message}`);
@@ -47,7 +47,7 @@ const initMarkets = async () => {
 // Funkcja zwracająca listę rynków (z cache lub pobierając nowe)
 const getMarkets = async () => {
     if (cachedMarkets.length > 0 && Date.now() - lastUpdate < MARKET_CACHE_TIME) {
-        logMessage('info', `♻️ Returning cached markets data.`);
+        //logMessage('info', `♻️ Returning cached markets data.`);
         return cachedMarkets;
     }
     return await initMarkets();

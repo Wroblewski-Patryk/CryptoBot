@@ -1,36 +1,35 @@
 {
-    "trading": {
-      "baseCurrency": "USDT",
-      "maxOpenPositions": 5,
-      "orderType": "market",
-      "marketType": "future",
-      "contractType": "PERPETUAL",
-      "interval": "15m",
-      
-      "riskManagement": {
-        "maxRiskPerTrade": 2.5,
-        "maxDailyLossPercent": 10
-      }
-    },
-    "dca": {
-      "enabled": true,
-      "dcaPercent": -20,
-      "dcaTimes": 2,
-      "dcaMultiplier": 1.1
-    },
-    "trailingStop": {
-      "enabled": true,
-      "trailingStopStart": 5,
-      "trailingStopStep": 2.5
-    },
-    "indicators": {
-      "enabled": true,
-      "interval": "15m",
-      "rsi": {
-        "enabled": true,
-        "overbought": 70,
-        "oversold": 30,
-        "period": 14
-      }
+  "trading": {
+    "baseCurrency": "USDT",
+    "maxOpenPositions": 5,
+    "orderType": "market",
+    "marketType": "future",
+    "contractType": "PERPETUAL",
+    "interval": "15m",
+    
+    "riskManagement": {
+      "maxRiskPerTrade": 2.5,
+      "maxDailyLossPercent": 10
     }
+  },
+  "dca": {
+    "enabled": true,
+    "dcaPercent": -20,
+    "dcaTimes": 2,
+    "dcaMultiplier": 1.1
+  },
+  "trailingStop": {
+    "enabled": true,
+    "trailingStopStart": 5,
+    "trailingStopStep": 2.5
+  },
+  "indicators": {
+    "interval": "15m",
+    "rsi": { "enabled": true, "period": 14, "overbought": 70, "oversold": 30 },
+    "macd": { "enabled": true, "fastPeriod": 12, "slowPeriod": 26, "signalPeriod": 9 },
+    "bollinger": { "enabled": true, "period": 20, "stdDev": 2 },
+    "adx": { "enabled": true, "period": 14, "threshold": 25 },
+    "emaShort": { "enabled": true, "period": 9 },
+    "emaLong": { "enabled": true, "period": 21 }
   }
+}
