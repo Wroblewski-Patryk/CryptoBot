@@ -1,5 +1,11 @@
 const { getInstance } = require('../../api/binance.service');
 const { logMessage } = require('../../core/logging');
+const { formatSymbol, formatPrice, 
+        formatSide } = require('../../core/utils');
+const { getConfig } = require('../../config/config');
+
+const { getOrders, createOrder } = require('../orders/orders.service');
+const { calculateOrderSize } = require('../risk/risk.service');
 const chalk = require('chalk');
 
 let cachedPositions = [];
@@ -26,7 +32,6 @@ const initPositions = async () => {
         lastUpdate = Date.now();
         logMessage('info', `📊 Positions updated successfully (${cachedPositions.length} open positions).`);
         
-        showPositions();
         return cachedPositions;
     } catch (error) {
         logMessage('error', `❌ Error fetching positions: ${error.message}`);
@@ -47,10 +52,17 @@ const getPositions = async () => {
 const updatePositions = async () => {
     logMessage('info', `🔄 Updating position data...`);
     await initPositions();
+
+    showPositions();
 };
 
 const showPositions = () => {
+    //console.clear();
     logMessage('debug', '💰 Lista pozycji');
+    if ( !cachedPositions.length ){
+        logMessage('debug', '- Brak otwartych pozycji -');
+        return null;
+    }
     for (const position of cachedPositions){
         const symbol = position.symbol;
         const margin = position.margin;
@@ -58,26 +70,55 @@ const showPositions = () => {
         const amount = position.amount;
         const side = position.side;
 
-        const symbolFormated = symbol.replace(/\/.*/, '');
-        const marginFormated = margin.toFixed(2) + '💲';
+        const symbolFormated = formatSymbol(symbol);
+        const marginFormated = formatPrice(margin);
         const profitPercent = (profit/margin*100);
-        const sideFormated = side.toUpperCase();
-        const symbolUp = "📈";
-        const symbolDown = "📉";
-        const sideSymbol = side === 'short' ? symbolDown : symbolUp;
+        const sideFormated = formatSide(side);
 
-        let sideLog = '[' + sideSymbol + ' ' + sideFormated + ']';
-        sideLog = side === 'short' ? chalk.red(sideLog) : chalk.green(sideLog);
-        const symbolLog = symbolFormated;
         const marginLog = chalk.white('Margin: ' + marginFormated);
         let profitLog = 'Profit: ' + profitPercent.toFixed(2)+'%';
         profitLog = profitPercent > 0 ? chalk.green(profitLog) : chalk.red(profitLog);
 
-        logMessage('debug', `${sideLog} ${symbolLog} - ${profitLog} - ${marginLog}`);
+        logMessage('debug', `${sideFormated} ${symbolFormated} - ${profitLog} - ${marginLog}`);
     }
+}
+const openPosition = async (signal) =>{
+    // CHECK OPENED POSITIONS
+    const openedPositions = await getPositions();
+    const openedPositionsLength = openedPositions.length;
+    const maxOpenedPositions = getConfig('trading.maxOpenPositions');
+    if( openedPositionsLength >= maxOpenedPositions ){
+        logMessage('info','Za dużo otwartych pozycji');
+        return null;
+    }
+    //CHECKING IS EXISTING
+    const existingPosition = openedPositions.find(pos => pos.symbol === signal.symbol);
+    if (existingPosition) {
+        logMessage('info',`⚠️ Pozycja dla ${signal.symbol} już otwarta!`);
+        return null;
+    }    
+    //CHECK OPENED ORDERS
+    // const orders = await getOrders();
+    // const openedOrders = orders.length;
+
+    // if( openedPositions + openedOrders >= maxOpenedPositions){
+    //     console.log('Za dużo otwartych zleceń');
+    //     return null;
+    // }
+
+
+    const amount = await calculateOrderSize(signal.symbol); 
+    if(!amount){
+        logMessage('error','Minimalna ilość zakupu nie wystarczająca.');
+        return null;
+    }
+    const orderType = getConfig('trading.order.type');
+    const order = await createOrder(signal.symbol, orderType, signal.side, amount);
+    return order;
 }
 module.exports = {
     initPositions,
     getPositions,
-    updatePositions
+    updatePositions,
+    openPosition
 };

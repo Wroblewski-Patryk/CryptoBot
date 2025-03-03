@@ -35,16 +35,5 @@ const logMessage = (level, message) => {
     fs.appendFileSync(LOG_FILE, logEntry + '\n', 'utf8');
 };
 
-// 🔹 Ikony dla różnych poziomów logów
-const getLogIcon = (level) => {
-    switch (level.toLowerCase()) {
-        case 'info': return '🟢';
-        case 'warn': return '🟡';
-        case 'error': return '🔴';
-        case 'debug': return '🔵';
-        default: return '⚪';
-    }
-};
-
 // 📌 Eksport funkcji
 module.exports = { logMessage };

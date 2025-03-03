@@ -2,14 +2,17 @@
   "trading": {
     "baseCurrency": "USDT",
     "maxOpenPositions": 5,
-    "orderType": "market",
     "marketType": "future",
     "contractType": "PERPETUAL",
     "interval": "15m",
     
-    "riskManagement": {
-      "maxRiskPerTrade": 2.5,
-      "maxDailyLossPercent": 10
+    "risk": {
+      "perTrade": 10,
+      "leverage": 15
+    },
+    "order":{
+      "type": "market",
+      "marginMode": "ISOLATED"
     }
   },
   "dca": {
@@ -22,6 +25,15 @@
     "enabled": true,
     "trailingStopStart": 5,
     "trailingStopStep": 2.5
+  },
+  "oldindicators": {
+    "interval": "15m",
+    "rsi": { "enabled": true, "period": 14, "overbought": 75, "oversold": 25 },
+    "macd": { "enabled": true, "fastPeriod": 9, "slowPeriod": 30, "signalPeriod": 10 },
+    "bollinger": { "enabled": true, "period": 20, "stdDev": 2.5 },
+    "adx": { "enabled": true, "period": 14, "threshold": 30 },
+    "emaShort": { "enabled": true, "period": 12 },
+    "emaLong": { "enabled": true, "period": 26 }
   },
   "indicators": {
     "interval": "15m",

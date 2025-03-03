@@ -59,8 +59,31 @@ const updateMarkets = async () => {
     await initMarkets();
 };
 
+const getMarketInfo = async (symbol) => {
+    try {
+        const markets = await getMarkets(); // Pobieramy rynki (z cache lub API)
+        const market = markets.find(m => m.symbol === symbol);
+        if (!market) {
+            throw new Error(`Nie znaleziono danych rynkowych dla ${symbol}`);
+        }
+
+        return {
+            symbol: market.symbol,
+            minNotional: market.limits?.cost?.min || 0, // Minimalna wartość transakcji
+            stepSize: market.precision?.amount || 0,    // Precyzja ilościowa (np. 0.01 BTC)
+            tickSize: market.precision?.price || 0,     // Precyzja ceny (np. 0.001 USDT)
+            maxNotional: market.limits?.cost?.max || Infinity, // Maksymalna wartość transakcji
+        };
+    } catch (error) {
+        console.error(`❌ Błąd w getMarketInfo: ${error.message}`);
+        return null;
+    }
+};
+
+
 module.exports = {
     initMarkets,
     getMarkets,
-    updateMarkets
+    updateMarkets,
+    getMarketInfo
 };

@@ -31,8 +31,27 @@ const updateWallet = async() => {
         return null;
     }
 }
+const getWalletBalance = async (asset = "USDT") => {
+    try {
+        // Jeśli wallet jest pusty, odświeżamy
+        if (!wallet || Object.keys(wallet).length === 0) {
+            await updateWallet();
+        }
+
+        // Pobieramy saldo dla wybranego aktywa
+        const balance = wallet.freeBalance || 0;
+        logMessage('info',`💰 Saldo dla ${asset}: ${balance}`);
+
+        return balance;
+    } catch (error) {
+        logMessage('error',`❌ Błąd w getWalletBalance: ${error.message}`);
+        return 0; // Zwracamy 0 zamiast błędu
+    }
+};
+
 module.exports = {
     initWallet,
     getWallet,
-    updateWallet
+    updateWallet,
+    getWalletBalance
 };
