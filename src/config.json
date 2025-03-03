@@ -15,16 +15,20 @@
       "marginMode": "ISOLATED"
     }
   },
+  "tp": {
+    "enabled": true,
+    "percent": 10
+  },
   "dca": {
     "enabled": true,
     "dcaPercent": -20,
     "dcaTimes": 2,
     "dcaMultiplier": 1.1
   },
-  "trailingStop": {
+  "tsl": {
     "enabled": true,
-    "trailingStopStart": 5,
-    "trailingStopStep": 2.5
+    "start": 4,
+    "step": 2
   },
   "oldindicators": {
     "interval": "15m",

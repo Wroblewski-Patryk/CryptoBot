@@ -7,7 +7,8 @@ const { getConfig } = require('../../config/config');
 const { getOrders, createOrder } = require('../orders/orders.service');
 const { calculateOrderSize } = require('../risk/risk.service');
 const { handleDCA } = require('./dca.service');
-
+const { handleTP } = require('./tp.service');
+const { handleTSL } = require('./tsl.service');
 const chalk = require('chalk');
 
 let cachedPositions = [];
@@ -126,15 +127,19 @@ const checkPositions = async () => {
     }
 
     for (const position of cachedPositions) {
-        logMessage('debug',`🔍 Sprawdzam pozycję: ${position.symbol}`);
+        logMessage('info',`🔍 Sprawdzam pozycję: ${position.symbol}`);
 
         // 📊 Sprawdzamy, czy należy dokupić (DCA)
         await handleDCA(position);
+
+        //Sprawdzamy, czy nie należy zamknąć pozycji na plusie
+        await handleTP(position);
 
         // 🚀 Sprawdzamy, czy aktywować Trailing Stop-Loss (TSL)
         //await handleTSL(position);
     }
 }
+
 module.exports = {
     initPositions,
     getPositions,
