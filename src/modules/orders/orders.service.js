@@ -21,7 +21,11 @@ const createOrder = async (symbol, type, side, quantity, price = null) => {
         }
 
         await setMarginMode(symbol);
-        await setLeverage(symbol);
+
+        const leverage = await setLeverage(symbol);
+        if ( !leverage ){
+            return null;
+        }
 
         logMessage('debug', `🚀 Creating ${type.toUpperCase()} order: ${side.toUpperCase()} ${symbol} | Quantity: ${quantity} | Price: ${price || 'MARKET PRICE'}`);
 
@@ -100,8 +104,10 @@ const setMarginMode = async (symbol) => {
             marginType: mode
         });
         logMessage('info',`✅ Tryb margin dla ${symbol} ustawiony na ${mode}`);
+        return true;
     } catch (error) {
         logMessage('error',`❌ Błąd ustawiania margin mode dla ${symbol}: ${error.message}`);
+        return false;
     }
 }
 const setLeverage = async (symbol) => {
@@ -116,8 +122,10 @@ const setLeverage = async (symbol) => {
         });
 
         logMessage('info',`✅ Ustawiono dźwignię ${leverage}x dla ${symbol}`);
+        return true;
     } catch (error) {
         console.error(`❌ Błąd ustawiania dźwigni dla ${symbol}: ${error.message}`);
+        return false;
     }
 }
 module.exports = {

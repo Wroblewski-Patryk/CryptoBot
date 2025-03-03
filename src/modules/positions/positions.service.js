@@ -6,6 +6,8 @@ const { getConfig } = require('../../config/config');
 
 const { getOrders, createOrder } = require('../orders/orders.service');
 const { calculateOrderSize } = require('../risk/risk.service');
+const { handleDCA } = require('./dca.service');
+
 const chalk = require('chalk');
 
 let cachedPositions = [];
@@ -54,6 +56,7 @@ const updatePositions = async () => {
     await initPositions();
 
     showPositions();
+    checkPositions();
 };
 
 const showPositions = () => {
@@ -115,6 +118,22 @@ const openPosition = async (signal) =>{
     const orderType = getConfig('trading.order.type');
     const order = await createOrder(signal.symbol, orderType, signal.side, amount);
     return order;
+};
+const checkPositions = async () => {
+    if (!cachedPositions || cachedPositions.length === 0) {
+        logMessage('info', "📌 Brak otwartych pozycji.");
+        return;
+    }
+
+    for (const position of cachedPositions) {
+        logMessage('debug',`🔍 Sprawdzam pozycję: ${position.symbol}`);
+
+        // 📊 Sprawdzamy, czy należy dokupić (DCA)
+        await handleDCA(position);
+
+        // 🚀 Sprawdzamy, czy aktywować Trailing Stop-Loss (TSL)
+        //await handleTSL(position);
+    }
 }
 module.exports = {
     initPositions,
