@@ -8,7 +8,7 @@ const { logMessage } = require('./logging');
 const eventLoops = [
     { name: 'Markets', action: updateMarkets, interval: 1 * 60 * 1000 }, // Co 60 sek.
     { name: 'Wallet', action: updateWallet, interval: 2 * 60 * 1000 }, // Co 2 min.
-    { name: 'Positions', action: updatePositions, interval: 0.25 * 60 * 1000 }, 
+    { name: 'Positions', action: updatePositions, interval: 0.1 * 60 * 1000 }, 
     { name: 'Signals', action: updateSignals, interval: 3 * 60 * 1000 }
 ];
 

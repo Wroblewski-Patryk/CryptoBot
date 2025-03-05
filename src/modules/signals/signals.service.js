@@ -7,9 +7,11 @@ const { getMarkets } = require("../markets/markets.service");
 const { checkIndicators } = require('../indicators/indicators.service');
 const { openPosition } = require('../positions/positions.service');
 
-const signals = [];
+let signals = [];
 
 const updateSignals = async () => {
+    signals = [];
+
     const markets = await getMarkets();
 
     for (const market of markets){
@@ -38,7 +40,7 @@ const updateSignals = async () => {
         }
         if (signal.strength >= 0.8 || signal.strength <= -0.8){
             signals.push(signal);
-            makePosition(signal);
+            await makePosition(signal);
         }
     }
     showSignals();
@@ -51,7 +53,7 @@ const showSignals = () => {
 
     if ( !signals.length ){
         logMessage('debug', `- Brak sygnałów -`);
-        return null
+        return;
     }
 
     for (const signal of signals){
@@ -64,7 +66,7 @@ const showSignals = () => {
 
         logMessage('debug', `${sideFormated} ${symbolFormated} - Siła: ${strength}`);
     }
-    return signals;
+    return;
 };
 const makePosition = async (signal) => {
     const position = {

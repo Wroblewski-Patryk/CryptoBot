@@ -1,13 +1,13 @@
 {
   "trading": {
     "baseCurrency": "USDT",
-    "maxOpenPositions": 5,
+    "maxOpenPositions": 10,
     "marketType": "future",
     "contractType": "PERPETUAL",
     "interval": "15m",
     
     "risk": {
-      "perTrade": 10,
+      "perTrade": 50,
       "leverage": 15
     },
     "order":{
@@ -17,7 +17,7 @@
   },
   "tp": {
     "enabled": true,
-    "percent": 10
+    "percent": 250
   },
   "dca": {
     "enabled": true,
@@ -30,22 +30,13 @@
     "start": 4,
     "step": 2
   },
-  "oldindicators": {
-    "interval": "15m",
-    "rsi": { "enabled": true, "period": 14, "overbought": 75, "oversold": 25 },
-    "macd": { "enabled": true, "fastPeriod": 9, "slowPeriod": 30, "signalPeriod": 10 },
-    "bollinger": { "enabled": true, "period": 20, "stdDev": 2.5 },
-    "adx": { "enabled": true, "period": 14, "threshold": 30 },
-    "emaShort": { "enabled": true, "period": 12 },
-    "emaLong": { "enabled": true, "period": 26 }
-  },
   "indicators": {
     "interval": "15m",
-    "rsi": { "enabled": true, "period": 14, "overbought": 70, "oversold": 30 },
-    "macd": { "enabled": true, "fastPeriod": 12, "slowPeriod": 26, "signalPeriod": 9 },
-    "bollinger": { "enabled": true, "period": 20, "stdDev": 2 },
-    "adx": { "enabled": true, "period": 14, "threshold": 25 },
-    "emaShort": { "enabled": true, "period": 9 },
-    "emaLong": { "enabled": true, "period": 21 }
+    "rsi": { "enabled": true, "period": 28, "overbought": 72, "oversold": 28 },
+    "macd": { "enabled": true, "fastPeriod": 15, "slowPeriod": 35, "signalPeriod": 10 },
+    "bollinger": { "enabled": true, "period": 28, "stdDev": 2.5 },
+    "adx": { "enabled": true, "period": 20, "threshold": 30 },
+    "emaShort": { "enabled": true, "period": 15 },
+    "emaLong": { "enabled": true, "period": 35 }
   }
 }

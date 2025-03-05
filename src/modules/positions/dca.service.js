@@ -1,6 +1,7 @@
 const { createOrder } = require('../orders/orders.service');
 const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
+const { getWalletBalance } = require('../wallet/wallet.service');
 
 // 📌 Przechowujemy historię DCA dla każdej pozycji
 let dcaHistory = {};
@@ -14,20 +15,25 @@ const handleDCA = async (position) => {
     // 📉 Sprawdzamy, czy strata przekroczyła `dcaPercent`
     const profitPercent = profit/margin*100;
     if (profitPercent >= dcaConfig.dcaPercent) {
-        logMessage('info',`⚠️ DCA dla ${symbol} NIEAKTYWNE (Strata ${profitPercent}%, limit: ${dcaConfig.dcaPercent}%)`);
+        logMessage('warn',`⚠️ DCA dla ${symbol} NIEAKTYWNE (Strata ${profitPercent}%, limit: ${dcaConfig.dcaPercent}%)`);
         return;
     }
 
     // 📊 Sprawdzamy, ile razy DCA było już wykonane dla tej pozycji
     if (!dcaHistory[symbol]) dcaHistory[symbol] = 0;
     if (dcaHistory[symbol] >= dcaConfig.dcaTimes) {
-        console.log(`⛔ Maksymalna liczba DCA (${dcaConfig.dcaTimes}) dla ${symbol} osiągnięta.`);
+        logMessage('warn',`⛔ Maksymalna liczba DCA (${dcaConfig.dcaTimes}) dla ${symbol} osiągnięta.`);
+        return;
+    }
+    // 📌 Obliczamy ile dokładamy (110% aktualnej pozycji)
+    const dcaAmount = amount * dcaConfig.dcaMultiplier;
+    const walletFunds = await getWalletBalance();
+    if( margin > walletFunds ){
+        logMessage('warn',`⛔ Brak środków dla ${symbol}.`);
         return;
     }
 
-    // 📌 Obliczamy ile dokładamy (110% aktualnej pozycji)
-    const dcaAmount = amount * dcaConfig.dcaMultiplier;
-    console.log(`📊 DCA aktywowane dla ${symbol}! Dokładamy ${dcaAmount} jednostek.`);
+    logMessage('info', `📊 DCA aktywowane dla ${symbol}! Dokładamy ${dcaAmount} jednostek.`);
 
     const orderSide = side === 'short' ? 'sell' : 'buy';
 
@@ -39,7 +45,11 @@ const handleDCA = async (position) => {
     if(makeOrder)
         dcaHistory[symbol] += 1;
 }
-
+const clearDCA = (symbol) => {
+    if (dcaHistory[symbol])
+        dcaHistory[symbol] = 0;
+}
 module.exports = {
-    handleDCA
+    handleDCA,
+    clearDCA
 };

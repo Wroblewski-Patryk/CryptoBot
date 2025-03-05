@@ -6,9 +6,9 @@ const { getConfig } = require('../../config/config');
 
 const { getOrders, createOrder } = require('../orders/orders.service');
 const { calculateOrderSize } = require('../risk/risk.service');
-const { handleDCA } = require('./dca.service');
+const { handleDCA, clearDCA } = require('./dca.service');
 const { handleTP } = require('./tp.service');
-const { handleTSL } = require('./tsl.service');
+const { handleTSL, clearTSL } = require('./tsl.service');
 const chalk = require('chalk');
 
 let cachedPositions = [];
@@ -23,13 +23,16 @@ const initPositions = async () => {
 
         // Filtrowanie tylko aktywnych pozycji
         const activePositions = accountInfo.filter(pos => parseFloat(pos.contracts) !== 0);
-
         cachedPositions = activePositions.map(position => ({
             symbol: position.symbol,
             margin: parseFloat(position.initialMargin), // Wartość margin
             profit: parseFloat(position.unrealizedPnl), // Zysk/Strata
             amount: parseFloat(position.contracts), // Ilość kontraktów
-            side: position.side // LONG / SHORT
+            side: position.side, // LONG / SHORT
+            entryPrice: position.entryPrice,
+            markPrice: position.markPrice,
+            stopLossPrice: position.stopLossPrice,
+            takeProfitPrice: position.takeProfitPrice
         }));
 
         lastUpdate = Date.now();
@@ -61,8 +64,8 @@ const updatePositions = async () => {
 };
 
 const showPositions = () => {
-    //console.clear();
-    logMessage('debug', '💰 Lista pozycji');
+    console.clear();
+    logMessage('debug', `💰 Lista pozycji (${cachedPositions.length}/${getConfig('trading.maxOpenPositions')})`);
     if ( !cachedPositions.length ){
         logMessage('debug', '- Brak otwartych pozycji -');
         return null;
@@ -110,7 +113,6 @@ const openPosition = async (signal) =>{
     //     return null;
     // }
 
-
     const amount = await calculateOrderSize(signal.symbol); 
     if(!amount){
         logMessage('error','Minimalna ilość zakupu nie wystarczająca.');
@@ -118,6 +120,10 @@ const openPosition = async (signal) =>{
     }
     const orderType = getConfig('trading.order.type');
     const order = await createOrder(signal.symbol, orderType, signal.side, amount);
+
+    //SET DCA TO 0
+    clearDCA(signal.symbol);
+    clearTSL(signal.symbol);
     return order;
 };
 const checkPositions = async () => {
@@ -136,7 +142,7 @@ const checkPositions = async () => {
         await handleTP(position);
 
         // 🚀 Sprawdzamy, czy aktywować Trailing Stop-Loss (TSL)
-        //await handleTSL(position);
+        await handleTSL(position);
     }
 }
 
