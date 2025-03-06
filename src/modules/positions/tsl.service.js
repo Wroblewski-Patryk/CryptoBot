@@ -4,7 +4,7 @@ const { getInstance } = require('../../api/binance.service');
 
 let tslTracking = {};
 
-const handleTSL = async (position) => {
+const handleTSL = async (position, closePosition) => {
     const tslConfig = getConfig('tsl');
     if (!tslConfig.enabled) return;
 
@@ -28,28 +28,17 @@ const handleTSL = async (position) => {
         // 📉 Sprawdzamy, czy profit spadł do poziomu `highProfit - tslStep`
         if (profitPercent <= tslTracking[symbol].highProfit - tslStep) {
             logMessage('info', `✅ ${symbol} osiągnęło poziom Trailing Stop Loss. Zamykam pozycję!`);
-            await closePosition(symbol, side, amount);
-            delete tslTracking[symbol]; // Usuwamy zapis TSL po zamknięciu pozycji
+            const closeOrder = await closePosition(symbol, side, amount);
+            if (closeOrder) {
+                delete tslTracking[symbol]; // Usuwamy zapis TSL po zamknięciu pozycji
+                logMessage('debug', `✅ Pozycja ${symbol} zamknięta! (Zlecenie: ${closeOrder.id})`);
+            } else {
+                logMessage('warn', `❌ Błąd zamykania pozycji dla ${symbol}.`);
+            }            
+            return;
         }
     } else {
         logMessage('warn', `📊 ${symbol} jeszcze nie osiągnęło poziomu aktywacji TSL (${profitPercent}% / ${tslStart}%)`);
-    }
-};
-
-// 🚀 Funkcja zamykająca pozycję
-const closePosition = async (symbol, side, amount) => {
-    try {
-        logMessage('info','closing position: '+symbol);
-        const binance = await getInstance();
-        const formattedSymbol = symbol.replace(':USDT', '').replace('/', '');
-        const opositeSide = side === 'long' ? 'SELL' : 'BUY';
-
-        const closeOrder = await binance.createOrder(formattedSymbol, "MARKET", opositeSide, amount);
-        logMessage('info', `✅ Pozycja ${symbol} zamknięta! (Zlecenie: ${closeOrder.id})`);
-        return closeOrder;
-    } catch (error) {
-        logMessage('warn', `❌ Błąd zamykania pozycji dla ${symbol}: ${error.message}`);
-        return null;
     }
 };
 const clearTSL = (symbol) => {

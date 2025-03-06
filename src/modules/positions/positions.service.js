@@ -70,7 +70,8 @@ const showPositions = () => {
         logMessage('debug', '- Brak otwartych pozycji -');
         return null;
     }
-    for (const position of cachedPositions){
+    const sortedPositions = [...cachedPositions].sort((a, b) => (b.profit / b.margin) - (a.profit / a.margin));
+    for (const position of sortedPositions){
         const symbol = position.symbol;
         const margin = position.margin;
         const profit = position.profit
@@ -136,19 +137,35 @@ const checkPositions = async () => {
         logMessage('info',`🔍 Sprawdzam pozycję: ${position.symbol}`);
 
         // 📊 Sprawdzamy, czy należy dokupić (DCA)
-        await handleDCA(position);
+        await handleDCA(position, closePosition);
 
         //Sprawdzamy, czy nie należy zamknąć pozycji na plusie
-        await handleTP(position);
+        await handleTP(position, closePosition);
 
         // 🚀 Sprawdzamy, czy aktywować Trailing Stop-Loss (TSL)
-        await handleTSL(position);
+        await handleTSL(position, closePosition);
     }
-}
+};
+const closePosition = async (symbol, side, amount) => {
+    try {
+        logMessage('info', `🚀 Zamykam pozycję: ${symbol}`);
+        const binance = await getInstance();
+        const formattedSymbol = symbol.replace(':USDT', '').replace('/', '');
+        const opositeSide = side === 'long' ? 'SELL' : 'BUY';
+
+        const closeOrder = await binance.createOrder(formattedSymbol, "MARKET", opositeSide, amount);
+        logMessage('debug', `✅ Pozycja ${symbol} zamknięta! (Zlecenie: ${closeOrder.id})`);
+        return closeOrder;
+    } catch (error) {
+        logMessage('warn', `❌ Błąd zamykania pozycji dla ${symbol}: ${error.message}`);
+        return null;
+    }
+};
 
 module.exports = {
     initPositions,
     getPositions,
     updatePositions,
-    openPosition
+    openPosition,
+    closePosition
 };

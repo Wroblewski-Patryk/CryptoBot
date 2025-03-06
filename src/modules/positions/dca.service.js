@@ -6,7 +6,7 @@ const { getWalletBalance } = require('../wallet/wallet.service');
 // 📌 Przechowujemy historię DCA dla każdej pozycji
 let dcaHistory = {};
 
-const handleDCA = async (position) => {
+const handleDCA = async (position, closePosition) => {
     const dcaConfig = getConfig('dca');
     if (!dcaConfig.enabled) return;
 
@@ -22,8 +22,13 @@ const handleDCA = async (position) => {
     // 📊 Sprawdzamy, ile razy DCA było już wykonane dla tej pozycji
     if (!dcaHistory[symbol]) dcaHistory[symbol] = 0;
     if (dcaHistory[symbol] >= dcaConfig.dcaTimes) {
-        logMessage('warn',`⛔ Maksymalna liczba DCA (${dcaConfig.dcaTimes}) dla ${symbol} osiągnięta.`);
-        return;
+        const closeOrder = await closePosition(symbol, side, amount);
+        if (closeOrder) {
+            logMessage('warn', `⛔ Maksymalna liczba DCA dla ${symbol} osiągnięta. Zamykam pozycję...`);
+        } else {
+            logMessage('warn', `❌ Błąd zamykania pozycji dla ${symbol}.`);
+        }
+        return;  // ✅ Zatrzymujemy działanie funkcji
     }
     // 📌 Obliczamy ile dokładamy (110% aktualnej pozycji)
     const dcaAmount = amount * dcaConfig.dcaMultiplier;

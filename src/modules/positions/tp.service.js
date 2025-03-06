@@ -2,7 +2,7 @@ const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
 const { getInstance } = require('../../api/binance.service');
 
-const handleTP = async (position) => {
+const handleTP = async (position, closePosition) => {
     const tpConfig = getConfig('tp');
     if (!tpConfig.enabled) return;
     
@@ -25,9 +25,13 @@ const handleTP = async (position) => {
                 opositeSide = 'BUY';
             }
             // Składamy zlecenie rynkowe do zamknięcia pozycji
-            const closeOrder = await binance.createOrder(formattedSymbol, "MARKET", opositeSide, amount);
-            logMessage('debug', `✅ Pozycja ${symbol} zamknięta! (Zlecenie: ${closeOrder.id})`);
-            return closeOrder;
+            const closeOrder = await closePosition(symbol, side, amount);
+            if (closeOrder) {
+                logMessage('debug', `✅ Pozycja ${symbol} zamknięta! (Zlecenie: ${closeOrder.id})`);
+            } else {
+                logMessage('warn', `❌ Błąd zamykania pozycji dla ${symbol}.`);
+            }
+            return;
         } catch (error) {
             logMessage('warn', `❌ Błąd zamykania pozycji dla ${symbol}: ${error.message}`);
             return null;
