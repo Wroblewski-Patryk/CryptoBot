@@ -21,7 +21,7 @@ const handleDCA = async (position, closePosition) => {
 
     // 📊 Sprawdzamy, ile razy DCA było już wykonane dla tej pozycji
     if (!dcaHistory[symbol]) dcaHistory[symbol] = 0;
-    if (dcaHistory[symbol] >= dcaConfig.dcaTimes) {
+    if (dcaHistory[symbol] >= dcaConfig.dcaTimes && dcaConfig.close) {
         const closeOrder = await closePosition(symbol, side, amount);
         if (closeOrder) {
             logMessage('warn', `⛔ Maksymalna liczba DCA dla ${symbol} osiągnięta. Zamykam pozycję...`);

@@ -22,9 +22,10 @@ const createOrder = async (symbol, type, side, quantity, price = null) => {
 
         await setMarginMode(symbol);
 
+
         const leverage = await setLeverage(symbol);
         if ( !leverage ){
-            return null;
+            return;
         }
 
         logMessage('debug', `🚀 Creating ${type.toUpperCase()} order: ${side.toUpperCase()} ${symbol} | Quantity: ${quantity} | Price: ${price || 'MARKET PRICE'}`);
@@ -124,7 +125,7 @@ const setLeverage = async (symbol) => {
         logMessage('info',`✅ Ustawiono dźwignię ${leverage}x dla ${symbol}`);
         return true;
     } catch (error) {
-        console.error(`❌ Błąd ustawiania dźwigni dla ${symbol}: ${error.message}`);
+        logMessage('error',`❌ Błąd ustawiania dźwigni dla ${symbol}: ${error.message}`);
         return false;
     }
 }

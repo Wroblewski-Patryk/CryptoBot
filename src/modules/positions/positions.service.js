@@ -60,7 +60,7 @@ const updatePositions = async () => {
     await initPositions();
 
     showPositions();
-    checkPositions();
+    await checkPositions();
 };
 
 const showPositions = () => {

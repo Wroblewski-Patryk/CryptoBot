@@ -19,11 +19,14 @@ const updateSignals = async () => {
 
         //UPDATE OHLCV DATA
         const ohlcv = await fetchOHLCV(symbol);
+        const highInterval = getConfig('indicators.highInterval');
+        const higherTimeframeOhlcv = await fetchOHLCV(symbol, highInterval); // Pobieramy dane z wyższego interwału
 
         //CHECK OHLCV BY INDICATORS BY MARKET 
         const closePrices = ohlcv.map(candle => candle[4]);
         const highPrices = ohlcv.map(candle => candle[2]);
         const lowPrices = ohlcv.map(candle => candle[3]);
+        const higherTimeframePrices = higherTimeframeOhlcv.map(candle => candle[4]);
 
         if (closePrices.length < 30) { // 30 to minimalna liczba dla MACD + ADX
             logMessage('error', '❌ Zbyt mało świec OHLCV do analizy wskaźników.');
@@ -31,14 +34,14 @@ const updateSignals = async () => {
         }
 
         // 📊 Analizujemy wskaźniki
-        const result = checkIndicators(closePrices, highPrices, lowPrices);
+        const result = await checkIndicators(closePrices, highPrices, lowPrices, higherTimeframePrices);
         
         const signal = {
             "symbol": symbol,
             "action": result.action,
             "strength": result.strength
         }
-        if (signal.strength >= 0.8 || signal.strength <= -0.8){
+        if (signal.strength >= 0.84 || signal.strength <= -0.84){
             signals.push(signal);
             await makePosition(signal);
         }

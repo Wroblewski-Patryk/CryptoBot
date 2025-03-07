@@ -1,12 +1,12 @@
 {
   "trading": {
     "baseCurrency": "USDT",
-    "maxOpenPositions": 10,
+    "maxOpenPositions": 7,
     "marketType": "future",
     "contractType": "PERPETUAL",
         
     "risk": {
-      "perTrade": 50,
+      "perTrade": 5, 
       "leverage": 15
     },
     "order":{
@@ -21,8 +21,9 @@
   "dca": {
     "enabled": true,
     "dcaPercent": -15,
-    "dcaTimes": 3,
-    "dcaMultiplier": 1.1
+    "dcaTimes": 2,
+    "dcaMultiplier": 0.75,
+    "close": false
   },
   "tsl": {
     "enabled": true,
@@ -31,11 +32,13 @@
   },
   "indicators": {
     "interval": "15m",
-    "rsi": { "enabled": true, "period": 21, "overbought": 65, "oversold": 35 },
+    "highInterval": "1h",
+    "rsi": { "enabled": true, "period": 21, "overbought": 70, "oversold": 30 },
     "macd": { "enabled": true, "fastPeriod": 12, "slowPeriod": 26, "signalPeriod": 9 },
     "bollinger": { "enabled": true, "period": 20, "stdDev": 2.0 },
     "adx": { "enabled": true, "period": 20, "threshold": 25 },
     "emaShort": { "enabled": true, "period": 10 },
-    "emaLong": { "enabled": true, "period": 25 }
+    "emaLong": { "enabled": true, "period": 25 },
+    "atr": { "enabled": false, "period": 14, "multiplier": 1.2, "thresholdLow": 0.8, "thresholdHigh": 1.2 }
   }
 }
