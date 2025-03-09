@@ -46,7 +46,7 @@ const updateSignals = async () => {
             await makePosition(signal);
         }
     }
-    showSignals();
+    //showSignals();
 
     return true;
 };

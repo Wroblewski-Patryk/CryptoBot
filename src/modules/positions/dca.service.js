@@ -2,6 +2,7 @@ const { createOrder } = require('../orders/orders.service');
 const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
 const { getWalletBalance } = require('../wallet/wallet.service');
+const { handleTSL } = require('./tsl.service');
 
 // 📌 Przechowujemy historię DCA dla każdej pozycji
 let dcaHistory = {};
@@ -20,16 +21,17 @@ const handleDCA = async (position, closePosition) => {
     }
 
     // 📊 Sprawdzamy, ile razy DCA było już wykonane dla tej pozycji
-    if (!dcaHistory[symbol]) dcaHistory[symbol] = 0;
-    if (dcaHistory[symbol] >= dcaConfig.dcaTimes && dcaConfig.close) {
-        const closeOrder = await closePosition(symbol, side, amount);
-        if (closeOrder) {
-            logMessage('warn', `⛔ Maksymalna liczba DCA dla ${symbol} osiągnięta. Zamykam pozycję...`);
-        } else {
-            logMessage('warn', `❌ Błąd zamykania pozycji dla ${symbol}.`);
+    if (!dcaHistory[symbol]) 
+        dcaHistory[symbol] = 0;
+
+    if (dcaHistory[symbol] >= dcaConfig.dcaTimes) {
+        logMessage('warn', `⛔ Maksymalna liczba DCA dla ${symbol} osiągnięta.`);
+        if (!getTSL(symbol)) {
+            await handleTSL(position, closePosition);
         }
-        return;  // ✅ Zatrzymujemy działanie funkcji
+        return;
     }
+
     // 📌 Obliczamy ile dokładamy (110% aktualnej pozycji)
     const dcaAmount = amount * dcaConfig.dcaMultiplier;
     const walletFunds = await getWalletBalance();
@@ -54,7 +56,14 @@ const clearDCA = (symbol) => {
     if (dcaHistory[symbol])
         dcaHistory[symbol] = 0;
 }
+const getDCA = (symbol) => {
+    let dca = dcaHistory[symbol];
+    if (!dca || dca === undefined)
+        dca = 0;
+    return dca;
+}
 module.exports = {
     handleDCA,
-    clearDCA
+    clearDCA,
+    getDCA
 };

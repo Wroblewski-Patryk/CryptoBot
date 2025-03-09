@@ -3,13 +3,14 @@ const { logMessage } = require('../../core/logging');
 const { formatSymbol, formatPrice, 
         formatSide } = require('../../core/utils');
 const { getConfig } = require('../../config/config');
+const chalk = require('chalk');
 
 const { getOrders, createOrder } = require('../orders/orders.service');
 const { calculateOrderSize } = require('../risk/risk.service');
-const { handleDCA, clearDCA } = require('./dca.service');
 const { handleTP } = require('./tp.service');
-const { handleTSL, clearTSL } = require('./tsl.service');
-const chalk = require('chalk');
+const { handleDCA, clearDCA, getDCA } = require('./dca.service');
+const { handleTSL, clearTSL, getTSL } = require('./tsl.service');
+const { handleTTP, clearTTP, getTTP } = require('./ttp.service');
 
 let cachedPositions = [];
 let lastUpdate = 0;
@@ -19,25 +20,37 @@ const POSITION_CACHE_TIME = 10 * 1000; // Cache na 10 sekund
 const initPositions = async () => {
     try {
         const binance = await getInstance();
-        const accountInfo = await binance.fetchPositions();
-
-        // Filtrowanie tylko aktywnych pozycji
+        const accountInfo = await binance.fetchPositions(); // Pobieramy pozycje
         const activePositions = accountInfo.filter(pos => parseFloat(pos.contracts) !== 0);
-        cachedPositions = activePositions.map(position => ({
-            symbol: position.symbol,
-            margin: parseFloat(position.initialMargin), // Wartość margin
-            profit: parseFloat(position.unrealizedPnl), // Zysk/Strata
-            amount: parseFloat(position.contracts), // Ilość kontraktów
-            side: position.side, // LONG / SHORT
-            entryPrice: position.entryPrice,
-            markPrice: position.markPrice,
-            stopLossPrice: position.stopLossPrice,
-            takeProfitPrice: position.takeProfitPrice
-        }));
 
+        // Pobieramy ceny w pętli zamiast `Promise.all()`
+        let updatedPositions = [];
+        for (const position of activePositions) {
+            try {
+                const formattedSymbol = position.symbol.replace(':USDT', '').replace('/', '');
+                const ticker = await binance.fetchTicker(formattedSymbol); // Pobieramy aktualną cenę
+                updatedPositions.push({
+                    symbol: position.symbol,
+                    margin: parseFloat(position.initialMargin),
+                    profit: parseFloat(position.unrealizedPnl),
+                    amount: parseFloat(position.contracts),
+                    side: position.side,
+                    entryPrice: position.entryPrice,
+                    lastPrice: ticker.last || position.markPrice, // Jeśli brak, użyj markPrice
+                    markPrice: position.markPrice,
+                    stopLossPrice: position.stopLossPrice,
+                    takeProfitPrice: position.takeProfitPrice
+                });
+            } catch (error) {
+                logMessage('warn', `❌ Błąd pobierania ceny dla ${position.symbol}: ${error.message}`);
+                updatedPositions.push({ ...position, lastPrice: position.markPrice });
+            }
+        }
+
+        cachedPositions = updatedPositions;
         lastUpdate = Date.now();
         logMessage('info', `📊 Positions updated successfully (${cachedPositions.length} open positions).`);
-        
+
         return cachedPositions;
     } catch (error) {
         logMessage('error', `❌ Error fetching positions: ${error.message}`);
@@ -87,7 +100,22 @@ const showPositions = () => {
         let profitLog = 'Profit: ' + profitPercent.toFixed(2)+'%';
         profitLog = profitPercent > 0 ? chalk.green(profitLog) : chalk.red(profitLog);
 
-        logMessage('debug', `${sideFormated} ${symbolFormated} - ${profitLog} - ${marginLog}`);
+        let additionalInfo = '';
+        const dca = getDCA(symbol);
+        const dcaInfo = ' DCA: ' + dca + 'x';
+        if (dca)
+            additionalInfo = additionalInfo + dcaInfo;
+        const ttp = getTTP(symbol);
+        const ttpInfo = ' TTP: ' + ttp + '%';
+        if (ttp > 0)
+            additionalInfo = additionalInfo + ttpInfo;
+        const tsl = getTSL(symbol);
+        const tslInfo = ' TSL: ' + tsl + '%';
+        if (tsl > 0)
+            additionalInfo = additionalInfo + tslInfo;
+        additionalInfo = chalk.cyan(additionalInfo);
+
+        logMessage('debug', `${sideFormated} ${symbolFormated} - ${profitLog} - ${marginLog}${additionalInfo}`);
     }
 }
 const openPosition = async (signal) =>{
@@ -105,15 +133,8 @@ const openPosition = async (signal) =>{
         logMessage('info',`⚠️ Pozycja dla ${signal.symbol} już otwarta!`);
         return null;
     }    
-    //CHECK OPENED ORDERS
-    // const orders = await getOrders();
-    // const openedOrders = orders.length;
-
-    // if( openedPositions + openedOrders >= maxOpenedPositions){
-    //     console.log('Za dużo otwartych zleceń');
-    //     return null;
-    // }
-
+    //TO DO - CHECK OPENED ORDERS
+    
     const amount = await calculateOrderSize(signal.symbol); 
     if(!amount){
         logMessage('error','Minimalna ilość zakupu nie wystarczająca.');
@@ -125,6 +146,7 @@ const openPosition = async (signal) =>{
     //SET DCA TO 0
     clearDCA(signal.symbol);
     clearTSL(signal.symbol);
+    clearTTP(signal.symbol);
     return order;
 };
 const checkPositions = async () => {
@@ -142,8 +164,8 @@ const checkPositions = async () => {
         //Sprawdzamy, czy nie należy zamknąć pozycji na plusie
         await handleTP(position, closePosition);
 
-        // 🚀 Sprawdzamy, czy aktywować Trailing Stop-Loss (TSL)
-        await handleTSL(position, closePosition);
+        // 🚀 Sprawdzamy, czy aktywować Trailing Take-Profit (TTP)
+        await handleTTP(position, closePosition);
     }
 };
 const closePosition = async (symbol, side, amount) => {
