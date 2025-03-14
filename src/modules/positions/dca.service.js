@@ -2,7 +2,6 @@ const { createOrder } = require('../orders/orders.service');
 const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
 const { getWalletBalance } = require('../wallet/wallet.service');
-const { handleTSL } = require('./tsl.service');
 
 // 📌 Przechowujemy historię DCA dla każdej pozycji
 let dcaHistory = {};
@@ -26,9 +25,6 @@ const handleDCA = async (position, closePosition) => {
 
     if (dcaHistory[symbol] >= dcaConfig.dcaTimes) {
         logMessage('warn', `⛔ Maksymalna liczba DCA dla ${symbol} osiągnięta.`);
-        if (!getTSL(symbol)) {
-            await handleTSL(position, closePosition);
-        }
         return;
     }
 

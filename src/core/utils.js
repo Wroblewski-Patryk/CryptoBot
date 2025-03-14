@@ -24,10 +24,12 @@ const formatSide = (side) => {
     }
     return formated;
 }
+const formatSymbolForBinance = (symbol) => symbol.replace(':USDT', '').replace('/', '');
 
 module.exports = { 
     catchAsync,
     formatSymbol,
     formatPrice,
-    formatSide
+    formatSide,
+    formatSymbolForBinance
 };

@@ -1,7 +1,7 @@
 const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
 
-let ttpTracking = {};
+let ttpTracking = new Map();
 
 const handleTTP = async (position, closePosition) => {
     const ttpConfig = getConfig('ttp');
@@ -12,17 +12,17 @@ const handleTTP = async (position, closePosition) => {
     const ttpStep = ttpConfig.step;
     const profitPercent = (profit / margin) * 100;
 
-    if (profitPercent >= ttpStart) {
-        if (!ttpTracking[symbol]) {
-            ttpTracking[symbol] = { highProfit: profitPercent };
-        }
+    if ( profitPercent >= ttpStart - ttpStep ) {
+        if ( profitPercent >= ttpStart && !ttpTracking.has(symbol) ) {
+                ttpTracking.set(symbol, { highProfit: profitPercent });
+            }
 
-        if (profitPercent > ttpTracking[symbol].highProfit) {
-            ttpTracking[symbol].highProfit = profitPercent;
+        if (profitPercent > (ttpTracking.get(symbol)?.highProfit || ttpStart)) {
+            ttpTracking.set(symbol, { highProfit: profitPercent });
             logMessage('info', `🔄 ${symbol} - Nowy poziom TTP: High ${profitPercent}%`);
         }
 
-        if (profitPercent <= ttpTracking[symbol].highProfit - ttpStep) {
+        if (profitPercent <= (ttpTracking.get(symbol)?.highProfit || ttpStart) - ttpStep){
             logMessage('info', `✅ ${symbol} osiągnęło poziom Trailing Take Profit. Zamykam pozycję!`);
             const closeOrder = await closePosition(symbol, side, amount);
             if (closeOrder) {
@@ -34,23 +34,25 @@ const handleTTP = async (position, closePosition) => {
             return;
         }
     } else {
+        clearTTP(symbol);
         logMessage('warn', `📊 ${symbol} jeszcze nie osiągnęło poziomu aktywacji TTP (${profitPercent}% / ${ttpStart}%)`);
     }
 };
 
 const clearTTP = (symbol) => {
-    if (ttpTracking[symbol]) delete ttpTracking[symbol];
+    if (ttpTracking.has(symbol)) 
+        ttpTracking.delete(symbol);
 };
 const getTTP = (symbol) => {
     const ttpConfig = getConfig('ttp');
 
     // Sprawdzamy, czy symbol istnieje w ttpTracking
-    if (!ttpTracking[symbol] || !ttpTracking[symbol].highProfit) {
+    if (!ttpTracking.has(symbol) || !ttpTracking.get(symbol)?.highProfit) {
         return '0.00'; // Jeśli nie ma danych, zwraca 0.00
     }
 
     const ttpStep = ttpConfig.step;
-    const highProfit = ttpTracking[symbol].highProfit;
+    const highProfit = ttpTracking.get(symbol).highProfit;
     const ttpLevel = Math.max(0, highProfit - ttpStep); // Zapewnia, że TTP nie będzie ujemne
 
     return ttpLevel.toFixed(2);

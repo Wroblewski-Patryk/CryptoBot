@@ -6,10 +6,10 @@ const { logMessage } = require('./logging');
 
 // Lista pętli
 const eventLoops = [
-    { name: 'Markets', action: updateMarkets, interval: 1 * 60 * 1000 }, // Co 60 sek.
-    { name: 'Wallet', action: updateWallet, interval: 2 * 60 * 1000 }, // Co 2 min.
-    { name: 'Positions', action: updatePositions, interval: 0.1 * 60 * 1000 }, 
-    { name: 'Signals', action: updateSignals, interval: 3 * 60 * 1000 }
+    { name: 'Markets', action: updateMarkets, interval: 1 * 60 * 1000 },
+    { name: 'Wallet', action: updateWallet, interval: 7 * 60 * 1000 },
+    { name: 'Positions', action: updatePositions, interval: 0.1 * 60 * 1000 },
+    { name: 'Signals', action: updateSignals, interval: 15 * 60 * 1000 }
 ];
 
 const runLoop = async (loop) => {

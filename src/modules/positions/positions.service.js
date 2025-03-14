@@ -1,7 +1,7 @@
 const { getInstance } = require('../../api/binance.service');
 const { logMessage } = require('../../core/logging');
 const { formatSymbol, formatPrice, 
-        formatSide } = require('../../core/utils');
+        formatSide, formatSymbolForBinance } = require('../../core/utils');
 const { getConfig } = require('../../config/config');
 const chalk = require('chalk');
 
@@ -11,6 +11,7 @@ const { handleTP } = require('./tp.service');
 const { handleDCA, clearDCA, getDCA } = require('./dca.service');
 const { handleTSL, clearTSL, getTSL } = require('./tsl.service');
 const { handleTTP, clearTTP, getTTP } = require('./ttp.service');
+const { handleSL } = require('./sl.service');
 
 let cachedPositions = [];
 let lastUpdate = 0;
@@ -27,7 +28,7 @@ const initPositions = async () => {
         let updatedPositions = [];
         for (const position of activePositions) {
             try {
-                const formattedSymbol = position.symbol.replace(':USDT', '').replace('/', '');
+                const formattedSymbol = formatSymbolForBinance(position.symbol);
                 const ticker = await binance.fetchTicker(formattedSymbol); // Pobieramy aktualną cenę
                 updatedPositions.push({
                     symbol: position.symbol,
@@ -104,16 +105,17 @@ const showPositions = () => {
         const dca = getDCA(symbol);
         const dcaInfo = ' DCA: ' + dca + 'x';
         if (dca)
-            additionalInfo = additionalInfo + dcaInfo;
+            additionalInfo = additionalInfo + chalk.cyan(dcaInfo);
+
         const ttp = getTTP(symbol);
         const ttpInfo = ' TTP: ' + ttp + '%';
         if (ttp > 0)
-            additionalInfo = additionalInfo + ttpInfo;
+            additionalInfo = additionalInfo + chalk.yellow(ttpInfo);
+        
         const tsl = getTSL(symbol);
         const tslInfo = ' TSL: ' + tsl + '%';
         if (tsl > 0)
-            additionalInfo = additionalInfo + tslInfo;
-        additionalInfo = chalk.cyan(additionalInfo);
+            additionalInfo = additionalInfo + chalk.magenta(tslInfo);
 
         logMessage('debug', `${sideFormated} ${symbolFormated} - ${profitLog} - ${marginLog}${additionalInfo}`);
     }
@@ -158,21 +160,27 @@ const checkPositions = async () => {
     for (const position of cachedPositions) {
         logMessage('info',`🔍 Sprawdzam pozycję: ${position.symbol}`);
 
-        // 📊 Sprawdzamy, czy należy dokupić (DCA)
+        // Sprawdzamy, czy należy dokupić (DCA)
         await handleDCA(position, closePosition);
 
-        //Sprawdzamy, czy nie należy zamknąć pozycji na plusie
+        //Sprawdzamy, czy nie należy zamknąć pozycji na plusie (TP)
         await handleTP(position, closePosition);
 
-        // 🚀 Sprawdzamy, czy aktywować Trailing Take-Profit (TTP)
+        // Sprawdzamy, czy aktywować Trailing Take-Profit (TTP)
         await handleTTP(position, closePosition);
+
+        // Sprawdzamy, czy aktywować Stop Loss (SL)
+        await handleSL(position, closePosition);
+
+        // Sprawdzamy, czy aktywować Trailing Stop-Loss (TSL)
+        await handleTSL(position, closePosition);
     }
 };
 const closePosition = async (symbol, side, amount) => {
     try {
         logMessage('info', `🚀 Zamykam pozycję: ${symbol}`);
         const binance = await getInstance();
-        const formattedSymbol = symbol.replace(':USDT', '').replace('/', '');
+        const formattedSymbol = formatSymbolForBinance(symbol);
         const opositeSide = side === 'long' ? 'SELL' : 'BUY';
 
         const closeOrder = await binance.createOrder(formattedSymbol, "MARKET", opositeSide, amount);
