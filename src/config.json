@@ -1,12 +1,13 @@
 {
   "trading": {
     "baseCurrency": "USDT",
+    "forbiddenCurrencies": ["USDC", "FDUSD", "HIPPO"],
     "maxOpenPositions": 5,
     "marketType": "future",
     "contractType": "PERPETUAL",
-        
+    
     "risk": {
-      "perTrade": 2.5, 
+      "perTrade": 1.5, 
       "leverage": 12
     },
     "order":{
@@ -20,23 +21,28 @@
   },
   "ttp": {
     "enabled": true,
-    "start": 4.5,
-    "step": 2.5
+    "start": 7.5,
+    "step": 4
   },
   "dca": {
     "enabled": true,
-    "dcaPercent": -20,
-    "dcaTimes": 2,
-    "dcaMultiplier": 1
+    "percent": -40,
+    "times": 2,
+    "multiplier": 1
   },
   "tsl": {
     "enabled": true,
+    "start": -35,
     "step": 5
+  },
+  "sl": {
+    "enabled": false,
+    "percent": 60
   },
   "indicators": {
     "interval": "15m",
-    "highInterval": "4h",
-    "rsi": { "enabled": true, "period": 21, "overbought": 70, "oversold": 30 },
+    "highInterval": "2h",
+    "rsi": { "enabled": true, "period": 21, "overbought": 75, "oversold": 25 },
     "macd": { "enabled": true, "fastPeriod": 12, "slowPeriod": 26, "signalPeriod": 9 },
     "bollinger": { "enabled": true, "period": 20, "stdDev": 2.0 },
     "adx": { "enabled": true, "period": 20, "threshold": 25 },

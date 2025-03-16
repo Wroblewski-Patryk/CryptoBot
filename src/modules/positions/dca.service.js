@@ -14,8 +14,8 @@ const handleDCA = async (position, closePosition) => {
     const entryPrice = position.entryPrice || margin / amount; // Średnia cena wejścia
     // 📉 Sprawdzamy, czy strata przekroczyła `dcaPercent`
     const profitPercent = profit/margin*100;
-    if (profitPercent >= dcaConfig.dcaPercent) {
-        logMessage('warn',`⚠️ DCA dla ${symbol} NIEAKTYWNE (Strata ${profitPercent}%, limit: ${dcaConfig.dcaPercent}%)`);
+    if (profitPercent >= dcaConfig.percent) {
+        logMessage('warn',`⚠️ DCA dla ${symbol} NIEAKTYWNE (Strata ${profitPercent}%, limit: ${dcaConfig.percent}%)`);
         return;
     }
 
@@ -23,13 +23,13 @@ const handleDCA = async (position, closePosition) => {
     if (!dcaHistory[symbol]) 
         dcaHistory[symbol] = 0;
 
-    if (dcaHistory[symbol] >= dcaConfig.dcaTimes) {
+    if (dcaHistory[symbol] >= dcaConfig.times) {
         logMessage('warn', `⛔ Maksymalna liczba DCA dla ${symbol} osiągnięta.`);
         return;
     }
 
     // 📌 Obliczamy ile dokładamy (110% aktualnej pozycji)
-    const dcaAmount = amount * dcaConfig.dcaMultiplier;
+    const dcaAmount = amount * dcaConfig.multiplier;
     const walletFunds = await getWalletBalance();
     if( margin > walletFunds ){
         logMessage('warn',`⛔ Brak środków dla ${symbol}.`);

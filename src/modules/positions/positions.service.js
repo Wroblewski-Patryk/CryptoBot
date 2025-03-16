@@ -114,7 +114,7 @@ const showPositions = () => {
         
         const tsl = getTSL(symbol);
         const tslInfo = ' TSL: ' + tsl + '%';
-        if (tsl > 0)
+        if (tsl < 0)
             additionalInfo = additionalInfo + chalk.magenta(tslInfo);
 
         logMessage('debug', `${sideFormated} ${symbolFormated} - ${profitLog} - ${marginLog}${additionalInfo}`);

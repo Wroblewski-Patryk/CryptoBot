@@ -16,13 +16,13 @@ const initMarkets = async () => {
 
         const baseCurrency = getConfig('trading.baseCurrency') || 'USDT';
         const contractType = getConfig('trading.contractType') || 'PERPETUAL'
-        
+        const forbiddenCurrencies = getConfig('trading.forbiddenCurrencies') || [];
+
         // Filtrowanie rynków
         const filteredMarkets = Object.values(markets).filter(market =>
             market.quote === baseCurrency &&
             market.info.contractType === contractType &&
-            market.base !== 'USDC' &&
-            market.base !== 'FDUSD'
+            !forbiddenCurrencies.includes(market.base)
         );
         cachedMarkets = filteredMarkets.map(market => ({
             symbol: market.symbol,

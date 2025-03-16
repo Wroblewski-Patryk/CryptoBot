@@ -35,28 +35,31 @@ const handleTSL = async (position, closePosition) => {
         clearTSL(symbol);
 
     // Jeśli profit osiągnął poziom `tslStart`
-    if (profitPercent >= tslStart) {
-        // Jeśli TSL nie był aktywny, ustaw pierwszą maksymalną stratę
-        if (!tslTracking.has(symbol)) {
+    if (!tslTracking.has(symbol)) {
+        if(profitPercent <= tslStart){
+            // Jeśli TSL nie był aktywny, ustaw pierwszą maksymalną stratę
             tslTracking.set(symbol, { maxLoss: tslStart - tslStep });
-            logMessage('info', `🔄 ${symbol} - Trailing Stop Loss aktywowany! Maksymalna strata: ${tslStart - tslStep}%`);
+            logMessage('debug', `🔄 ${symbol} - Trailing Stop Loss aktywowany! Maksymalna strata: ${tslStart - tslStep}%`);
+            return;
+        } else {
+            logMessage('debug', `📊 ${symbol} jeszcze nie osiągnęło poziomu aktywacji TSL (${profitPercent}% / ${tslStart}%)`);
+            return;
         }
+    }
 
+
+    if ( tslTracking.has(symbol)){
         let tslData = tslTracking.get(symbol);
         let { maxLoss } = tslData;
 
-        // Jeśli profit wzrósł, przesuwamy poziom maksymalnej straty
-        if (profitPercent > maxLoss + tslStep) {
+        if (profitPercent > maxLoss + tslStep){
             maxLoss = profitPercent - tslStep;
             tslTracking.set(symbol, { maxLoss });
-            logMessage('info', `🔼 ${symbol} - Nowy poziom TSL: Maksymalna strata przesunięta na ${maxLoss}%`);
+            logMessage('debug', `🔼 ${symbol} - Nowy poziom TSL: Maksymalna strata przesunięta na ${maxLoss}%`);        
         }
-
-        // Jeśli profit spadł do maksymalnej straty, zamykamy pozycję
-        if (profitPercent <= maxLoss) {
+        if (profitPercent < maxLoss){
             logMessage('info', `✅ ${symbol} osiągnęło poziom Trailing Stop Loss. Zamykam pozycję na poziomie ${maxLoss}%!`);
-            // const closeOrder = await closePosition(symbol, side, amount);
-            const closeOrder = true;
+            const closeOrder = await closePosition(symbol, side, amount);
             if (closeOrder) {
                 clearTSL(symbol);
                 logMessage('debug', `✅ Pozycja ${symbol} zamknięta na poziomie ${maxLoss}%!`);
@@ -65,9 +68,6 @@ const handleTSL = async (position, closePosition) => {
             }
             return;
         }
-    } else {
-        clearTSL(symbol);
-        logMessage('warn', `📊 ${symbol} jeszcze nie osiągnęło poziomu aktywacji TSL (${profitPercent}% / ${tslStart}%)`);
     }
 };
 
@@ -82,13 +82,13 @@ const clearTSL = (symbol) => {
 const getTSL = (symbol) => {
     const tslConfig = getConfig('tsl');
 
-    if (!tslTracking.has(symbol) || !tslTracking.get(symbol)?.highProfit) {
+    if (!tslTracking.has(symbol) || !tslTracking.get(symbol)?.maxLoss) {
         return '0.00';
     }
 
     const tslStep = tslConfig.step;
-    const highProfit = tslTracking.get(symbol).highProfit;
-    const tslLevel = Math.max(0, highProfit - tslStep);
+    const maxLoss = tslTracking.get(symbol).maxLoss;
+    const tslLevel = Math.min(0, maxLoss);
 
     return tslLevel.toFixed(2);
 };
