@@ -16,7 +16,7 @@ const handleTSL = async (position, closePosition) => {
 
     // Sprawdzamy stan DCA
     const dca = getDCA(symbol);
-    const maxDca = getConfig('dca.dcaTimes');
+    const maxDca = getConfig('dca.times');
 
     if (dca === null || dca === undefined) {
         logMessage('error', `❌ Błąd pobierania wartości DCA dla ${symbol}.`);
