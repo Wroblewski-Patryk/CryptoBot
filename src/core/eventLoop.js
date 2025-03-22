@@ -1,7 +1,7 @@
 const { updateMarkets } = require('../modules/markets/markets.service');
 const { updateWallet } = require('../modules/wallet/wallet.service');
 const { updatePositions } = require('../modules/positions/positions.service');
-const { updateSignals } = require('../modules/signals/signals.service');
+const { evaluateStrategies } = require('../modules/strategies/strategies.service');
 const { logMessage } = require('./logging');
 
 // Lista pętli
@@ -9,7 +9,7 @@ const eventLoops = [
     { name: 'Markets', action: updateMarkets, interval: 1 * 60 * 1000 },
     { name: 'Wallet', action: updateWallet, interval: 7 * 60 * 1000 },
     { name: 'Positions', action: updatePositions, interval: 0.1 * 60 * 1000 },
-    { name: 'Signals', action: updateSignals, interval: 15 * 60 * 1000 }
+    { name: 'Strategies', action: evaluateStrategies, interval: 5 * 60 * 1000 }
 ];
 
 const runLoop = async (loop) => {

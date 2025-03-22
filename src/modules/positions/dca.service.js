@@ -11,20 +11,20 @@ const handleDCA = async (position, closePosition) => {
     if (!dcaConfig.enabled) return;
 
     const { symbol, margin, amount, profit, side } = position;
-    const entryPrice = position.entryPrice || margin / amount; // Średnia cena wejścia
-    // 📉 Sprawdzamy, czy strata przekroczyła `dcaPercent`
-    const profitPercent = profit/margin*100;
-    if (profitPercent >= dcaConfig.percent) {
-        logMessage('warn',`⚠️ DCA dla ${symbol} NIEAKTYWNE (Strata ${profitPercent}%, limit: ${dcaConfig.percent}%)`);
-        return;
-    }
-
     // 📊 Sprawdzamy, ile razy DCA było już wykonane dla tej pozycji
     if (!dcaHistory[symbol]) 
         dcaHistory[symbol] = 0;
 
     if (dcaHistory[symbol] >= dcaConfig.times) {
         logMessage('warn', `⛔ Maksymalna liczba DCA dla ${symbol} osiągnięta.`);
+        return;
+    }
+    
+    // 📉 Sprawdzamy, czy strata przekroczyła `dcaPercent`
+    const profitPercent = profit/margin*100;
+    const percent = dcaConfig.percents[dcaHistory[symbol]] || -40;
+    if (profitPercent >= percent) {
+        logMessage('warn',`⚠️ DCA dla ${symbol} NIEAKTYWNE (Strata ${profitPercent}%, limit: ${percent}%)`);
         return;
     }
 
@@ -41,6 +41,7 @@ const handleDCA = async (position, closePosition) => {
     const orderSide = side === 'short' ? 'sell' : 'buy';
 
     // 🛒 Składamy zamówienie DCA
+    const entryPrice = position.entryPrice || margin / amount; // Średnia cena wejścia
     const type = getConfig('trading.order.type');
     const makeOrder = await createOrder(symbol, type, orderSide, dcaAmount, entryPrice);
 

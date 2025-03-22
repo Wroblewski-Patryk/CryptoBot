@@ -2,7 +2,7 @@
   "trading": {
     "baseCurrency": "USDT",
     "forbiddenCurrencies": ["USDC", "FDUSD", "HIPPO"],
-    "maxOpenPositions": 5,
+    "maxOpenPositions": 10,
     "marketType": "future",
     "contractType": "PERPETUAL",
     
@@ -26,8 +26,8 @@
   },
   "dca": {
     "enabled": true,
-    "percent": -40,
-    "times": 2,
+    "percents": [ -20, -40, -60, -80 ],
+    "times": 4,
     "multiplier": 1
   },
   "tsl": {
@@ -40,14 +40,40 @@
     "percent": 60
   },
   "indicators": {
-    "interval": "15m",
-    "highInterval": "2h",
-    "rsi": { "enabled": true, "period": 21, "overbought": 75, "oversold": 25 },
-    "macd": { "enabled": true, "fastPeriod": 12, "slowPeriod": 26, "signalPeriod": 9 },
-    "bollinger": { "enabled": true, "period": 20, "stdDev": 2.0 },
-    "adx": { "enabled": true, "period": 20, "threshold": 25 },
-    "emaShort": { "enabled": true, "period": 10 },
-    "emaLong": { "enabled": true, "period": 25 },
-    "atr": { "enabled": false, "period": 14, "multiplier": 1.2, "thresholdLow": 0.8, "thresholdHigh": 1.2 }
+    "intervals": {
+      "low": "15m",
+      "high": "2h"
+    },
+    "rsi": { "enabled": true, "weight": 1.0,
+       "period": 21, "overbought": 75, "oversold": 25 },
+    "macd": { "enabled": true, "weight": 1.2,
+       "fastPeriod": 12, "slowPeriod": 30, "signalPeriod": 9 },
+    "bollinger": { "enabled": true, "weight": 1.0,
+      "period": 30, "stdDev": 2.5 },
+    "adx": { "enabled": true,  "weight": 0.8,
+      "period": 20, "threshold": 35 },
+    "atr": { "enabled": true,  "weight": 0.6,
+      "period": 14, "multiplier": 1.5, 
+        "thresholdLow": 0.7, "thresholdHigh": 1.7 },
+    "emaShort": { "enabled": true, "weight": 0.5,
+      "period": 10 },
+    "emaLong": { "enabled": true, "weight": 0.5,
+      "period": 30 }
+  },
+
+  "strategies": {
+    "reversal": {
+      "enabled": true,
+      "minStrength": 0.6,
+      "indicators": ["rsi","macd", "bollinger", "adx", "atr"]
+    },
+    "trendFollowing": {
+      "enabled": false,
+      "minStrength": 0.5,
+      "indicators": ["emaShort", "emaLong", "rsi", "macd", "adx"]
+    },
+    "ichimoku": {
+      "enabled": false
+    }
   }
 }

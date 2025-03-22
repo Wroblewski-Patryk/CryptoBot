@@ -1,8 +1,9 @@
 const { getInstance } = require('../../api/binance.service');
 const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
+const { formatSymbolForBinance } = require('../../core/utils');
 
-const { updateMarketCache } = require('./cache.service');
+const { calculateRSI, calculateMACD, calculateBollingerBands, calculateADX, calculateATR, calculateEMA } = require('./indicators.service');
 
 let cachedMarkets = [];
 let lastUpdate = 0;
@@ -22,21 +23,29 @@ const initMarkets = async () => {
         const filteredMarkets = Object.values(markets).filter(market =>
             market.quote === baseCurrency &&
             market.info.contractType === contractType &&
+            market.type === "swap" &&
             !forbiddenCurrencies.includes(market.base)
         );
-        cachedMarkets = filteredMarkets.map(market => ({
-            symbol: market.symbol,
-            base: market.base,
-            quote: market.quote,
-            type: market.type,
-            precision: market.precision,
-            limits: market.limits
-        }));
-        
+
+        const tickers = await binance.fetchTickers();
+
+        cachedMarkets = filteredMarkets.map(market => {
+            const ticker = tickers[market.symbol];
+            const lastPrice = ticker?.last ?? null;
+            return {
+                symbol: market.symbol,
+                base: market.base,
+                quote: market.quote,
+                type: market.type,
+                precision: market.precision,
+                limits: market.limits,
+                lastPrice: lastPrice
+            }
+        });
+
         lastUpdate = Date.now();
         logMessage('info', `📊 Markets updated successfully (${cachedMarkets.length} pairs).`);
 
-        await updateMarketCache(cachedMarkets);
         return cachedMarkets;
     } catch (error) {
         logMessage('error', `❌ Error fetching markets: ${error.message}`);
@@ -66,24 +75,94 @@ const getMarketInfo = async (symbol) => {
         if (!market) {
             throw new Error(`Nie znaleziono danych rynkowych dla ${symbol}`);
         }
-
         return {
             symbol: market.symbol,
             minNotional: market.limits?.cost?.min || 0, // Minimalna wartość transakcji
             stepSize: market.precision?.amount || 0,    // Precyzja ilościowa (np. 0.01 BTC)
             tickSize: market.precision?.price || 0,     // Precyzja ceny (np. 0.001 USDT)
             maxNotional: market.limits?.cost?.max || Infinity, // Maksymalna wartość transakcji
+            lastPrice: market.lastPrice
         };
     } catch (error) {
         console.error(`❌ Błąd w getMarketInfo: ${error.message}`);
         return null;
     }
 };
+const getMarketIndicators = async (symbol, strategyName) => {
+    try {
+        const binance = await getInstance();
+        const strategies = getConfig('strategies');
+        const indicatorsConfig = getConfig('indicators');
+        const strategyConfig = strategies[strategyName];
 
+        if (!strategyConfig) {
+            throw new Error(`Strategia ${strategyName} nie istnieje w konfiguracji.`);
+        }
+
+        // Użycie poprawnego interwału ze strategii lub domyślnie 15m
+        const interval = strategyConfig.interval || indicatorsConfig.intervals.low || "15m";
+
+        const formattedSymbol = formatSymbolForBinance(symbol);
+        //console.log(`🔍 Pobieranie świec dla ${formattedSymbol} (interwał: ${interval})`);
+        const candles = await binance.fetchOHLCV(formattedSymbol, interval, undefined, 250);
+ 
+        if (!candles || candles.length === 0) {
+            console.log(`⚠️ Brak danych świecowych dla ${symbol}, nie można obliczyć wskaźników.`);
+            return null;
+        }
+        // Pobranie cen zamknięcia
+        // const timestamp = candles.map(candle => candle[0]);
+        // const openPrices = candles.map(candle => candle[1]);
+        const highPrices = candles.map(candle => candle[2]);
+        const lowPrices = candles.map(candle => candle[3]); 
+        const closePrices = candles.map(candle => candle[4]);
+        // const volume = candles.map(candle => candle[5]);
+
+        // Sprawdzenie, czy mamy wystarczającą ilość danych dla każdego wskaźnika
+        if (closePrices.length < 25) {
+            console.log(`⚠️ Za mało danych do obliczenia wskaźników dla ${symbol}. Wymagane min. 25 świec.`);
+            return null;
+        }
+
+        // Obliczanie wskaźników
+        const indicators = {
+            rsi: strategyConfig.indicators.includes("rsi") ? calculateRSI(closePrices, indicatorsConfig.rsi.period) : null,
+            macd: strategyConfig.indicators.includes("macd") ? calculateMACD(closePrices, indicatorsConfig.macd.fastPeriod, indicatorsConfig.macd.slowPeriod, indicatorsConfig.macd.signalPeriod) : null,
+            bollinger: strategyConfig.indicators.includes("bollinger") ? calculateBollingerBands(closePrices, indicatorsConfig.bollinger.period, indicatorsConfig.bollinger.stdDev) : null,
+            adx: strategyConfig.indicators.includes("adx") ? calculateADX(highPrices, lowPrices, closePrices, indicatorsConfig.adx.period) : null,
+            atr: strategyConfig.indicators.includes("atr") ? calculateATR(highPrices, lowPrices, closePrices, indicatorsConfig.atr.period) : null,
+            emaShort: strategyConfig.indicators.includes("emaShort") ? calculateEMA(closePrices, indicatorsConfig.emaShort.period) : null,
+            emaLong: strategyConfig.indicators.includes("emaLong") ? calculateEMA(closePrices, indicatorsConfig.emaLong.period) : null,
+        };
+        
+        //console.log(`📊 Wskaźniki dla ${symbol}:`, indicators);
+        return indicators;
+
+    } catch (error) {
+        logMessage('error', `❌ Błąd przy pobieraniu wskaźników dla ${symbol}: ${error.message}`);
+        return null;
+    }
+};
+
+const getMarketData = async (symbol, strategyName) => {
+    try {
+        const info = await getMarketInfo(symbol);
+        const indicators = await getMarketIndicators(symbol, strategyName);
+        if (!info || !indicators) return null;
+
+        return { "info": info, "indicators": indicators };
+    } catch (error) {
+        logMessage('error', `❌ Error fetching market data for ${symbol}: ${error.message}`);
+        return null;
+    }
+};
 
 module.exports = {
     initMarkets,
     getMarkets,
     updateMarkets,
-    getMarketInfo
+
+    getMarketInfo,
+    getMarketIndicators,
+    getMarketData
 };

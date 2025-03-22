@@ -6,7 +6,7 @@ const { getConfig } = require('../../config/config');
 const chalk = require('chalk');
 
 const { getOrders, createOrder } = require('../orders/orders.service');
-const { calculateOrderSize } = require('../risk/risk.service');
+const { calculateOrderSize } = require('./risk.service');
 const { handleTP } = require('./tp.service');
 const { handleDCA, clearDCA, getDCA } = require('./dca.service');
 const { handleTSL, clearTSL, getTSL } = require('./tsl.service');
@@ -79,7 +79,7 @@ const updatePositions = async () => {
 
 const showPositions = () => {
     console.clear();
-    logMessage('debug', `💰 Lista pozycji (${cachedPositions.length}/${getConfig('trading.maxOpenPositions')})`);
+    logMessage('debug', `📋 Lista pozycji (${cachedPositions.length}/${getConfig('trading.maxOpenPositions')})`);
     if ( !cachedPositions.length ){
         logMessage('debug', '- Brak otwartych pozycji -');
         return null;
@@ -185,6 +185,11 @@ const closePosition = async (symbol, side, amount) => {
 
         const closeOrder = await binance.createOrder(formattedSymbol, "MARKET", opositeSide, amount);
         logMessage('debug', `✅ Pozycja ${symbol} zamknięta! (Zlecenie: ${closeOrder.id})`);
+        
+        clearDCA(symbol);
+        clearTSL(symbol);
+        clearTTP(symbol);
+
         return closeOrder;
     } catch (error) {
         logMessage('warn', `❌ Błąd zamykania pozycji dla ${symbol}: ${error.message}`);
