@@ -1,6 +1,7 @@
+const chalk = require("chalk");
 const { getConfig } = require("../../config/config");
 const { logMessage } = require("../../core/logging");
-const { formatSymbol, formatSide } = require("../../core/utils");
+const { formatSymbol, formatSide, formatStrategy } = require("../../core/utils");
 
 const { getMarkets, getMarketData } = require("../markets/markets.service");
 const { openPosition } = require("../positions/positions.service");
@@ -11,30 +12,12 @@ const strategies = {
 };
 const signals = new Map();
 
-/**
- * Analizuje wszystkie rynki i wybiera najlepsze sygnały
- */
 const evaluateStrategies = async () => {
   try {
     const markets = await getMarkets();
-
-    if (!markets || !Array.isArray(markets) || markets.length === 0) {
-      logMessage("error", "⚠️ Brak dostępnych rynków do analizy!");
-      return;
-    }
-
     const config = getConfig("strategies");
-    if (!config) {
-      logMessage("error", "❌ Błąd: Nie udało się pobrać konfiguracji strategii!");
-      return;
-    }
 
     for (const market of markets) {
-      if (!market || !market.symbol) {
-        logMessage("error", `❌ Błąd: Brak symbolu dla rynku! ${JSON.stringify(market)}`);
-        continue;
-      }
-
       logMessage("info", `📌 Sprawdzam rynek: ${market.symbol}`);
 
       let bestSignal = null;
@@ -42,21 +25,14 @@ const evaluateStrategies = async () => {
       let bestStrategy = "";
 
       for (const strategyName of Object.keys(strategies)) {
-        if (!strategyName) continue;
-
-        logMessage("info", `🔍 Sprawdzam strategię: ${strategyName} dla ${market.symbol}`);
-        const marketData = await getMarketData(market.symbol, strategyName);
-
-        if (!marketData || !marketData.indicators) {
-          logMessage("error", `⚠️ Brak marketData dla ${market.symbol}, pomijam strategię.`);
-          continue;
-        }
-
         const strategyConfig = config[strategyName];
         if (!strategyConfig || !strategyConfig.enabled) {
           logMessage("warn", `⚠️ Strategia ${strategyName} jest wyłączona.`);
           continue;
         }
+
+        logMessage("info", `🔍 Sprawdzam strategię: ${strategyName} dla ${market.symbol}`);
+        const marketData = await getMarketData(market.symbol, strategyName);
         const signal = await strategies[strategyName].checkSignal(marketData);
 
         if (!signal) {
@@ -79,30 +55,14 @@ const evaluateStrategies = async () => {
           strength: bestStrength,
           type: bestSignal.type
         });
-        //TU DZIALA
-        const minStrength = 0.5;
-        if (bestStrength >= minStrength) {
-          logMessage("debug", `🚀 Otwieram pozycję na ${market.symbol} - ${bestSignal.type} - ${bestSignal.strength}`);
-          // Otwarcie pozycji
-          const orderSignal = {
-            symbol: market.symbol,
-            side: bestSignal.type,
-          } 
-          const position = await openPosition(orderSignal);
-          if (position) {
-            logMessage("success", `✅ Otwarto pozycję na ${market.symbol} - ${bestSignal.type}`);
-          }
-        } else {
-          logMessage("warn", `⚠️ Sygnał dla ${market.symbol} jest zbyt słaby: ${bestStrength}/${strategyStrength}`);
-          //signals.delete(market.symbol); // Usunięcie rynku, jeśli sygnał jest zbyt słaby
-        }
-
       } else {
           logMessage("warn", "⚠️ Brak wystarczających sygnałów dla tego rynku.");
           signals.delete(market.symbol); // Usunięcie rynku, jeśli nie ma sygnału
       }
     }
+
     logSignals();
+    checkSignals();
   } catch (error) {
     logMessage("error", `❌ Błąd w evaluateStrategies: ${error.message}`);
   }
@@ -110,6 +70,7 @@ const evaluateStrategies = async () => {
 
 const logSignals = () => {
   console.clear();
+  
   logMessage("debug", "📋 Lista wszystkich sygnałów:");
   if (signals.size === 0) {
       logMessage("debug", "- Brak aktywnych sygnałów. -");
@@ -117,8 +78,37 @@ const logSignals = () => {
       signals.forEach((value, key) => {
         const symbol = formatSymbol(key);
         const side = formatSide(value.type);
-          logMessage("debug", `${side} ${symbol} → Strategia: ${value.strategy}, Siła: ${value.strength}`);
+        const strategy = formatStrategy(value.strategy);
+        const strength = chalk.green(value.strength);
+          logMessage("debug", `${side} ${symbol} - 💡 ${strategy} 💪 ${strength}`);
       });
   }
 };
-module.exports = { evaluateStrategies, logSignals };
+const checkSignals = async () => {
+  logMessage("debug", "🔍 Sprawdzanie sygnałów...");
+  const sortedSignals = Array.from(signals.entries()).sort((a, b) => b[1].strength - a[1].strength);
+
+  for (const [symbol, signal] of sortedSignals) {
+    logMessage("debug", `Sygnał dla: ${symbol}, ${signal.strategy} - ${signal.type} - ${signal.strength}`);
+    const orderSignal = {
+      symbol: symbol,
+      side: signal.type,
+    };
+    await makePosition(orderSignal);
+  }
+};
+const makePosition = async (order) => {
+  try {
+    const position = await openPosition(order);
+    if (position) {
+      logMessage("debug", `✅ Otwarto pozycję na ${order.symbol} - ${order.side}`);
+    }
+  } catch (error) {
+    logMessage("error", `❌ Błąd otwierania pozycji na ${order.symbol}: ${error.message}`);
+  }
+};
+module.exports = { 
+  evaluateStrategies, 
+  logSignals, 
+  checkSignals 
+};

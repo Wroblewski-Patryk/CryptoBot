@@ -24,6 +24,11 @@ const formatSide = (side) => {
     }
     return formated;
 }
+const formatStrategy = (strategy) => {
+    let formated = '';
+    formated = String(strategy).charAt(0).toUpperCase() + String(strategy).slice(1);
+    return formated;
+}
 const formatSymbolForBinance = (symbol) => symbol.replace(':USDT', '').replace('/', '');
 
 module.exports = { 
@@ -31,5 +36,6 @@ module.exports = {
     formatSymbol,
     formatPrice,
     formatSide,
-    formatSymbolForBinance
+    formatSymbolForBinance,
+    formatStrategy
 };

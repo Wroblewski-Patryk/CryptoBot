@@ -1,6 +1,7 @@
 const { getInstance } = require('../../api/binance.service');
 const { getConfig } = require('../../config/config');
 const { logMessage } = require('../../core/logging');
+const { formatSymbolForBinance } = require('../../core/utils');
 
 
 // 🔄 Funkcja tworząca zlecenia na Binance
@@ -21,7 +22,6 @@ const createOrder = async (symbol, type, side, quantity, price = null) => {
         }
 
         await setMarginMode(symbol);
-
 
         const leverage = await setLeverage(symbol);
         if ( !leverage ){
@@ -113,12 +113,18 @@ const setMarginMode = async (symbol) => {
 }
 const setLeverage = async (symbol) => {
     try {
+        const leverage = getConfig("trading.risk.leverage") || 15; 
+        const currentLeverage = await getLeverage(symbol);
+        if (currentLeverage === leverage) {
+            logMessage('info', `⚙️ Dźwignia ${leverage}x dla ${symbol} już ustawiona`);
+            return true;
+        }
+
         const symbolFormated = symbol.replace(':USDT', '').replace('/','');
         const binance = await getInstance();
-        const leverage = getConfig("trading.risk.leverage") || 15; // Domyślna dźwignia z configa
 
         await binance.fapiPrivatePostLeverage({
-            symbol: symbolFormated, // Binance wymaga formatu "BTCUSDT"
+            symbol: symbolFormated, 
             leverage: leverage
         });
 
@@ -129,6 +135,28 @@ const setLeverage = async (symbol) => {
         return false;
     }
 }
+const getLeverage = async (symbol) => {
+    try {
+        const symbolFormated = formatSymbolForBinance(symbol);
+        const binance = await getInstance();
+
+        const positions = await binance.fapiPrivateGetPositionRisk();
+
+        const position = positions.find(p => p.symbol === symbolFormated);
+
+        if (!position) {
+            logMessage('warn', `⚠️ Nie znaleziono pozycji dla ${symbolFormated}`);
+            return null;
+        }
+
+        const leverage = parseInt(position.leverage, 10);
+        logMessage('info', `🔍 Aktualna dźwignia dla ${symbolFormated} to ${leverage}x`);
+        return leverage;
+    } catch (error) {
+        logMessage('error', `❌ Błąd przy pobieraniu dźwigni dla ${symbol}: ${error.message}`);
+        return null;
+    }
+};
 module.exports = {
     createOrder,
     cancelOrder,
