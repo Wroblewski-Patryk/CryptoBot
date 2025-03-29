@@ -7,8 +7,8 @@
   },
   "trading": {
     "baseCurrency": "USDT",
-    "forbiddenCurrencies": ["USDC", "FDUSD", "HIPPO", "BTCDOM"],
-    "maxOpenPositions": 0,
+    "forbiddenCurrencies": ["USDC", "FDUSD", "HIPPO", "BTCDOM", "JELLYJELLY"],
+    "maxOpenPositions": 10,
     "marketType": "future",
     "contractType": "PERPETUAL",
     
@@ -27,8 +27,8 @@
   },
   "ttp": {
     "enabled": true,
-    "start": 10,
-    "step": 5
+    "starts": [ 5, 10, 20, 40, 80 ],
+    "steps": [ 2.5, 5, 10, 15, 25 ]
   },
   "dca": {
     "enabled": true,
@@ -52,49 +52,51 @@
     },
     "rsi": { 
         "enabled": true, "weight": 1,
-        "period": 21, "overbought": 70, "oversold": 30 
+        "period": 20, "overbought": 70, "oversold": 30 
       },
     "macd": { 
       "enabled": true, "weight": 1.2,
-      "fastPeriod": 12, "slowPeriod": 30, "signalPeriod": 9 
+      "fastPeriod": 16, "slowPeriod": 32, "signalPeriod": 9 
     },
     "bollinger": { 
       "enabled": true, "weight": 1,
-      "period": 30, "stdDev": 2.5 
+      "period": 30, "stdDev": 2.2 
     },
     "adx": { 
       "enabled": true,  "weight": 0.8,
       "period": 20, "threshold": 35 
     },
     "atr": { 
-      "enabled": true,  "weight": 0.6,
-      "period": 14, "multiplier": 1.5, 
+      "enabled": true,  "weight": 0.5,
+      "period": 16, "multiplier": 1.5, 
       "thresholdLow": 0.7, "thresholdHigh": 1.7 
     },
     "emaShort": { 
       "enabled": true, "weight": 0.8,
-      "period": 4 
+      "period": 16 
     },
     "emaLong": { 
       "enabled": true, "weight": 0.8,
-      "period": 16 
+      "period": 96 
     },
     "emaCross": { 
-      "enabled": true, "weight": 1.2,
-      "period": 4, "period2": 16 
-    }
+      "enabled": true, "weight": 1.6,
+      "period": 16, "period2": 96 
+    },
+    "rejection": { "weight": 0.8 },
+    "falseCross": { "weight": 0.6 }
   },
 
   "strategies": {
     "reversal": {
       "enabled": true,
-      "minStrength": 0.6,
+      "minStrength": 0.56,
       "indicators": ["rsi","macd", "bollinger", "adx", "atr"]
     },
     "trendFollowing": {
-      "enabled": false,
+      "enabled": true,
       "minStrength": 0.63,
-      "indicators": ["emaShort", "emaLong", "macd", "adx"]
+      "indicators": ["emaShort", "emaLong", "macd", "adx", "rsi"]
     },
     "ichimoku": {
       "enabled": false

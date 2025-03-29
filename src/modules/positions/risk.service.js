@@ -3,6 +3,7 @@ const { getConfig } = require('../../config/config');
 const { getMarketInfo } = require('../markets/markets.service'); // Pobieranie stepSize i minNotional
 const { getInstance } = require('../../api/binance.service');
 const { logMessage } = require('../../core/logging');
+const { formatSymbolForBinance } = require('../../core/utils');
 
 async function calculateOrderSize(symbol) {
     try {
@@ -32,7 +33,8 @@ async function calculateOrderSize(symbol) {
 
         // 🔢 Obliczamy wielkość zlecenia
         const binance = await getInstance();
-        const ticker = await binance.fetchTicker(symbol);
+        const formatedSymbol = formatSymbolForBinance(symbol);
+        const ticker = await binance.fetchTicker(formatedSymbol);
         const entryPrice = ticker.last; // Ostatnia cena rynkowa
 
         let amount = positionSize / entryPrice; // Ilość jednostek do kupna/sprzedaży

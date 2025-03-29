@@ -5,7 +5,7 @@ const { formatSymbol, formatPrice,
 const { getConfig } = require('../../config/config');
 const chalk = require('chalk');
 
-const { getOrders, createOrder } = require('../orders/orders.service');
+const { createOrder } = require('../orders/orders.service');
 const { calculateOrderSize } = require('./risk.service');
 const { handleTP } = require('./tp.service');
 const { handleDCA, clearDCA, getDCA } = require('./dca.service');
@@ -70,11 +70,15 @@ const getPositions = async () => {
 
 // Funkcja aktualizująca pozycje (np. dla pętli głównej)
 const updatePositions = async () => {
-    logMessage('info', `🔄 Updating position data...`);
-    await initPositions();
+    
+        logMessage('info', `🔄 Updating position data...`);
+        await initPositions();
 
-    showPositions();
-    await checkPositions();
+        showPositions();
+        
+    if (cachedPositions.length > 0){
+        await checkPositions();
+    }
 };
 
 const showPositions = () => {

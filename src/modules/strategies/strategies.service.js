@@ -16,9 +16,9 @@ const evaluateStrategies = async () => {
   try {
     const markets = await getMarkets();
     const config = getConfig("strategies");
-
+    let i = 0;
     for (const market of markets) {
-      logMessage("info", `📌 Sprawdzam rynek: ${market.symbol}`);
+      logMessage("info", `📌 Sprawdzam rynek: ${market.symbol} (${i+1}/${markets.length})`);
 
       let bestSignal = null;
       let bestStrength = 0;
@@ -33,6 +33,10 @@ const evaluateStrategies = async () => {
 
         logMessage("info", `🔍 Sprawdzam strategię: ${strategyName} dla ${market.symbol}`);
         const marketData = await getMarketData(market.symbol, strategyName);
+        if( !marketData || !marketData.info || !marketData.indicators ){
+          logMessage("warn", `⚠️ Brak danych dla ${market.symbol} - ${strategyName}`);
+          continue;
+        }
         const signal = await strategies[strategyName].checkSignal(marketData);
 
         if (!signal) {
@@ -59,6 +63,7 @@ const evaluateStrategies = async () => {
           logMessage("warn", "⚠️ Brak wystarczających sygnałów dla tego rynku.");
           signals.delete(market.symbol); // Usunięcie rynku, jeśli nie ma sygnału
       }
+      i++;
     }
 
     logSignals();

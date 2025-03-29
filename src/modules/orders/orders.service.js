@@ -23,9 +23,11 @@ const createOrder = async (symbol, type, side, quantity, price = null) => {
 
         await setMarginMode(symbol);
 
-        const leverage = await setLeverage(symbol);
-        if ( !leverage ){
-            return;
+        const leverage = getConfig("trading.risk.leverage") || 15; 
+        for (let i = leverage; i >= 7; i--) {
+            const leverageSet = await setLeverage(symbol, i);
+            if ( !leverageSet ) continue;
+            else break;
         }
 
         logMessage('debug', `🚀 Creating ${type.toUpperCase()} order: ${side.toUpperCase()} ${symbol} | Quantity: ${quantity} | Price: ${price || 'MARKET PRICE'}`);
@@ -98,7 +100,7 @@ const setMarginMode = async (symbol) => {
     try {
         const binance = await getInstance();
         const mode = getConfig('trading.order.marginMode') || "ISOLATED";
-        const symbolFormated = symbol.replace(':USDT', '').replace('/','');
+        const symbolFormated = formatSymbolForBinance(symbol);
 
         await binance.fapiPrivatePostMarginType({
             symbol: symbolFormated,
@@ -107,20 +109,18 @@ const setMarginMode = async (symbol) => {
         logMessage('info',`✅ Tryb margin dla ${symbol} ustawiony na ${mode}`);
         return true;
     } catch (error) {
+        if (error?.message?.includes("No need to change margin type")) {
+            logMessage('info', `ℹ️ Margin mode dla ${symbol} już ustawiony`);
+            return true;
+        }
+
         logMessage('error',`❌ Błąd ustawiania margin mode dla ${symbol}: ${error.message}`);
         return false;
     }
 }
-const setLeverage = async (symbol) => {
+const setLeverage = async (symbol, leverage) => {
     try {
-        const leverage = getConfig("trading.risk.leverage") || 15; 
-        const currentLeverage = await getLeverage(symbol);
-        if (currentLeverage === leverage) {
-            logMessage('info', `⚙️ Dźwignia ${leverage}x dla ${symbol} już ustawiona`);
-            return true;
-        }
-
-        const symbolFormated = symbol.replace(':USDT', '').replace('/','');
+        const symbolFormated = formatSymbolForBinance(symbol);
         const binance = await getInstance();
 
         await binance.fapiPrivatePostLeverage({
@@ -135,28 +135,6 @@ const setLeverage = async (symbol) => {
         return false;
     }
 }
-const getLeverage = async (symbol) => {
-    try {
-        const symbolFormated = formatSymbolForBinance(symbol);
-        const binance = await getInstance();
-
-        const positions = await binance.fapiPrivateGetPositionRisk();
-
-        const position = positions.find(p => p.symbol === symbolFormated);
-
-        if (!position) {
-            logMessage('warn', `⚠️ Nie znaleziono pozycji dla ${symbolFormated}`);
-            return null;
-        }
-
-        const leverage = parseInt(position.leverage, 10);
-        logMessage('info', `🔍 Aktualna dźwignia dla ${symbolFormated} to ${leverage}x`);
-        return leverage;
-    } catch (error) {
-        logMessage('error', `❌ Błąd przy pobieraniu dźwigni dla ${symbol}: ${error.message}`);
-        return null;
-    }
-};
 module.exports = {
     createOrder,
     cancelOrder,

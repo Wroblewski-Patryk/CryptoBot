@@ -42,7 +42,7 @@ const handleTSL = async (position, closePosition) => {
             logMessage('debug', `🔄 ${symbol} - Trailing Stop Loss aktywowany! Maksymalna strata: ${tslStart - tslStep}%`);
             return;
         } else {
-            logMessage('debug', `📊 ${symbol} jeszcze nie osiągnęło poziomu aktywacji TSL (${profitPercent}% / ${tslStart}%)`);
+            logMessage('info', `📊 ${symbol} jeszcze nie osiągnęło poziomu aktywacji TSL (${profitPercent}% / ${tslStart}%)`);
             return;
         }
     }
@@ -55,7 +55,7 @@ const handleTSL = async (position, closePosition) => {
         if (profitPercent > maxLoss + tslStep){
             maxLoss = profitPercent - tslStep;
             tslTracking.set(symbol, { maxLoss });
-            logMessage('debug', `🔼 ${symbol} - Nowy poziom TSL: Maksymalna strata przesunięta na ${maxLoss}%`);        
+            logMessage('info', `🔼 ${symbol} - Nowy poziom TSL: Maksymalna strata przesunięta na ${maxLoss}%`);        
         }
         if (profitPercent < maxLoss){
             logMessage('info', `✅ ${symbol} osiągnęło poziom Trailing Stop Loss. Zamykam pozycję na poziomie ${maxLoss}%!`);

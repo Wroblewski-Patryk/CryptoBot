@@ -8,21 +8,27 @@ const handleTTP = async (position, closePosition) => {
     if (!ttpConfig.enabled) return;
 
     const { symbol, margin, amount, profit, side } = position;
-    const ttpStart = ttpConfig.start;
-    const ttpStep = ttpConfig.step;
     const profitPercent = (profit / margin) * 100;
 
+    const starts = ttpConfig.starts;
+    const steps = ttpConfig.steps;
+    const ttpStart = getDynamicStart(profitPercent, starts);
+    const ttpStep = getDynamicStep(profitPercent, starts, steps);
+    
     if ( profitPercent >= ttpStart - ttpStep ) {
-        if ( profitPercent >= ttpStart && !ttpTracking.has(symbol) ) {
-                ttpTracking.set(symbol, { highProfit: profitPercent });
-            }
+        const tracking = ttpTracking.get(symbol);
 
-        if (profitPercent > (ttpTracking.get(symbol)?.highProfit || ttpStart)) {
-            ttpTracking.set(symbol, { highProfit: profitPercent });
+        if ( !tracking && profitPercent >= ttpStart ) {
+            ttpTracking.set(symbol, { highProfit: profitPercent, step: ttpStep });
             logMessage('info', `🔄 ${symbol} - Nowy poziom TTP: High ${profitPercent}%`);
         }
 
-        if (profitPercent <= (ttpTracking.get(symbol)?.highProfit || ttpStart) - ttpStep){
+        if ( tracking && profitPercent > tracking.highProfit) {
+            ttpTracking.set(symbol, { highProfit: profitPercent, step: ttpStep });
+            logMessage('info', `🔄 ${symbol} - Nowy poziom TTP: High ${profitPercent}%`);
+        }
+
+        if ( tracking && profitPercent <= tracking.highProfit - ttpStep){
             logMessage('info', `✅ ${symbol} osiągnęło poziom Trailing Take Profit. Zamykam pozycję!`);
             const closeOrder = await closePosition(symbol, side, amount);
             if (closeOrder) {
@@ -44,20 +50,38 @@ const clearTTP = (symbol) => {
         ttpTracking.delete(symbol);
 };
 const getTTP = (symbol) => {
-    const ttpConfig = getConfig('ttp');
-
-    // Sprawdzamy, czy symbol istnieje w ttpTracking
     if (!ttpTracking.has(symbol) || !ttpTracking.get(symbol)?.highProfit) {
-        return '0.00'; // Jeśli nie ma danych, zwraca 0.00
+        return '0.00';
     }
 
-    const ttpStep = ttpConfig.step;
+    const ttpStep = ttpTracking.get(symbol).step;
     const highProfit = ttpTracking.get(symbol).highProfit;
-    const ttpLevel = Math.max(0, highProfit - ttpStep); // Zapewnia, że TTP nie będzie ujemne
+    const ttpLevel = Math.max(0, highProfit - ttpStep);
 
     return ttpLevel.toFixed(2);
 };
-
+const getDynamicStart = (profitPercent, starts) => {
+    let selectedStart = starts[0];
+    for (let i = 0; i < starts.length; i++) {
+        if (profitPercent >= starts[i]) {
+            selectedStart = starts[i];
+        } else {
+            break;
+        }
+    }
+    return selectedStart;
+};
+const getDynamicStep = (profitPercent, starts, steps) => {
+    let selectedStep = steps[0];
+    for (let i = 0; i < starts.length; i++) {
+        if (profitPercent >= starts[i]) {
+            selectedStep = steps[i];
+        } else {
+            break;
+        }
+    }
+    return selectedStep;
+};
 module.exports = {
     handleTTP,
     clearTTP,
