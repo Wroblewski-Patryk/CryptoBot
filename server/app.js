@@ -1,39 +1,50 @@
-require('./core/errorHandler');
-const bot = require('./core/bot');
-const { logMessage } = require('./core/logging');
+// app.js
+const express = require('express');
+const cors = require("cors");
+const errorMiddleware = require('./core/errorMiddleware');
 
 const { apiGetWallet } = require('./modules/wallet/wallet.service');
 const { apiGetPositions } = require('./modules/positions/positions.service');
 const { apiGetSignals } = require('./modules/strategies/strategies.service');
+const { apiGetMarkets } = require('./modules/markets/markets.service');
 
+const { initializeBot } = require('./core/bot');
 
-const link = "https://localhost";
-const port = 3000;
-const url = link + ':' + port;
+const app = express();
 
-async function startBot() {
-    bot.listen(port, () => {
-        logMessage('debug', `🚀 Bot is running at: \x1b]8;;${url}\x1b\\${url}\x1b]8;;\x1b\\`);
-    });
+// Middleware
+app.use(cors({
+    origin: "http://localhost:3001",
+    credentials: true
+}));
+app.use(express.json());
+app.use(errorMiddleware); // Middleware błędów (do GUI)
 
-    bot.get('/', (req, res) => {
-        res.send('Hello World!');
-    });
+// Trasy API
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
 
-    bot.get("/api/positions", async (req, res) => {
-        // Tutaj dodaj logikę do pobierania pozycji z bazy danych lub innego źródła
-        const positions = await apiGetPositions();
-        res.json(positions || []);
-    });
-    bot.get("/api/sinals", async (req,res) => {
-        const signals = await apiGetSignals();
-        res.json(signals || []);
-    })
-    bot.get("/api/wallet", async (req,res) => {
-        const wallet = await apiGetWallet();
-        res.json(wallet || []);
-    })
-    
-}
+app.get("/api/positions", async (req, res) => {
+    const positions = await apiGetPositions();
+    res.json(positions || []);
+});
 
-startBot();
+app.get("/api/signals", async (req,res) => {
+    const signals = await apiGetSignals();
+    res.json(signals || []);
+});
+
+app.get("/api/wallet", async (req,res) => {
+    const wallet = await apiGetWallet();
+    res.json(wallet || []);
+});
+
+app.get("/api/markets", async (req,res) => {
+    const markets = await apiGetMarkets();
+    res.json(markets || []);
+});
+
+initializeBot();
+
+module.exports = app;
