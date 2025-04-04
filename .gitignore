@@ -1,2 +1,5 @@
 package-lock.json
 node_modules/
+server/.env
+server/logs/app.log
+server/logs/app.log

@@ -159,7 +159,10 @@ const getMarketData = async (symbol, strategyName) => {
         return null;
     }
 };
-
+const apiGetMarkets = async () => {
+    let finalMarkets = cachedMarkets;
+    return finalMarkets;
+}
 module.exports = {
     initMarkets,
     getMarkets,
@@ -167,5 +170,7 @@ module.exports = {
 
     getMarketInfo,
     getMarketIndicators,
-    getMarketData
+    getMarketData,
+
+    apiGetMarkets
 };
