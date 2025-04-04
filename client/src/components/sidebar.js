@@ -7,7 +7,7 @@ import ProgressBar from "./progressBar";
 export default function Sidebar(){
     const [signals, setSignals] = useState([]);
     const [wallet, setWallet] = useState([]);
-    const [markets, setMarkets] = useState([]);
+
     useEffect(() => {
         const fetchAll = () => {
             api.get("/signals")
@@ -16,11 +16,7 @@ export default function Sidebar(){
             api.get("/wallet")
                 .then(res => setWallet(res.data))
                 .catch(console.error);
-            api.get("/markets")
-                .then(res => setMarkets(res.data))
-                .catch(console.error);
-        };
-      
+        }
         fetchAll();
         const interval = setInterval(fetchAll, 1*60*1000); 
       
@@ -29,6 +25,7 @@ export default function Sidebar(){
 
     let percent = wallet.usedBalance / wallet.totalBalance * 100;
     if (isNaN(percent)) percent = 0;
+
     return(
         <div>
             <h3 className="mt-4 mb-2">Wallet balance</h3>
@@ -42,8 +39,6 @@ export default function Sidebar(){
             ) : (
                 <p>No signals</p>
             )}
-            <h3 className="mt-4 mb-4">Markets <small>(414)</small></h3>
-            <p>No markets</p>
         </div>
     );
 }

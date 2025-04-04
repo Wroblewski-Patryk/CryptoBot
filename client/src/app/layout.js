@@ -19,17 +19,15 @@ export default function MainLayout({ children }) {
         <header className="p-6 fixed top-0 right-0 left-0">
           <Navbar/>
         </header>
+        
         <div className="flex flex-row h-screen">
-          {/* MAIN CONTENT */}
-          <main className="w-3/4 p-6 overflow-y-auto bg-gray-900 text-white p-4">
-          <PageTitle title={pageTitle}/>
+          <main className="w-3/4 p-6 bg-gray-900 overflow-y-auto">
+            <PageTitle title={pageTitle}/>
             {children}
           </main>
 
-          {/* SIDEBAR */}
-          <aside className="w-1/4 p-6 border-l border-emerald-700">
+          <aside className="w-1/4 p-6 border-l border-emerald-700 overflow-y-auto">
             <Sidebar/>
-            {/* Tu możesz wrzucić np. info o strategii, statusie bota, przyciski itp. */}
           </aside>
         </div>
       </body>
