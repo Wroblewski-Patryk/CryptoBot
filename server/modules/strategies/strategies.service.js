@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-const { getConfig } = require("../../config/config");
+const { getConfig } = require("../../core/config");
 const { logMessage } = require("../../core/logging");
 const { formatSymbol, formatSide, formatStrategy } = require("../../core/utils");
 

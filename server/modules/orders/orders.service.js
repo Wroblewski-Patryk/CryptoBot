@@ -1,5 +1,5 @@
 const { getInstance } = require('../../api/binance.service');
-const { getConfig } = require('../../config/config');
+const { getConfig } = require('../../core/config');
 const { logMessage } = require('../../core/logging');
 const { formatSymbolForBinance } = require('../../core/utils');
 

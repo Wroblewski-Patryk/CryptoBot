@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
 const chalk = require('chalk');
-//const { getConfig } = require('../config/config');
+//const { getConfig } = require('../core/config');
 
 // 📂 Ścieżka do pliku logów
 const LOG_FILE = path.join(__dirname, '../logs/app.log');

@@ -2,7 +2,7 @@ const { getInstance } = require('../../api/binance.service');
 const { logMessage } = require('../../core/logging');
 const { formatSymbol, formatPrice, 
         formatSide, formatSymbolForBinance } = require('../../core/utils');
-const { getConfig } = require('../../config/config');
+const { getConfig } = require('../../core/config');
 const chalk = require('chalk');
 
 const { createOrder } = require('../orders/orders.service');

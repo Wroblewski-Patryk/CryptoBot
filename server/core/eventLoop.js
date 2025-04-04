@@ -3,7 +3,7 @@ const { updateWallet } = require('../modules/wallet/wallet.service');
 const { updatePositions } = require('../modules/positions/positions.service');
 const { evaluateStrategies } = require('../modules/strategies/strategies.service');
 const { logMessage } = require('./logging');
-const { getConfig } = require('../config/config');
+const { getConfig } = require('../core/config');
 
 // Lista pętli
 const eventLoops = [

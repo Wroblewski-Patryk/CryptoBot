@@ -1,5 +1,5 @@
 const { createOrder } = require('../orders/orders.service');
-const { getConfig } = require('../../config/config');
+const { getConfig } = require('../../core/config');
 const { logMessage } = require('../../core/logging');
 const { getWalletBalance } = require('../wallet/wallet.service');
 

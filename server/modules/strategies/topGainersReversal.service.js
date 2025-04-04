@@ -1,4 +1,4 @@
-const { getConfig } = require("../../config/config");
+const { getConfig } = require("../../core/config");
 const { logMessage } = require("../../core/logging");
 
 const checkSignal = async (marketData) => {
@@ -35,20 +35,17 @@ const checkSignal = async (marketData) => {
 
   let signals = { sell: 0 };
   let totalWeight = 0;
-
   // RSI
   const rsiValue = rsi[rsi.length - 1];
   totalWeight += weights.rsi;
   if (rsiValue > (indicatorsConfig.rsi?.overbought ?? 70)) {
     signals.sell += weights.rsi;
   }
-
   // MACD
   if (macd.MACD < macd.signal && macd.histogram < 0) {
     signals.sell += weights.macd;
   }
   totalWeight += weights.macd;
-
   // EMA logic: short > long AND price < short
   const shortEma = emaShort[emaShort.length - 1];
   const longEma = emaLong[emaLong.length - 1];
@@ -59,14 +56,18 @@ const checkSignal = async (marketData) => {
     signals.sell += weights.ema;
   }
   totalWeight += weights.ema;
-
   // Final decision
   const strength = totalWeight === 0 ? 0 : signals.sell / totalWeight;
+
+  let finalSignal = "hold";
+  let finalStrength = 0;
   const minStrength = strategyConfig.minStrength ?? 0.5;
+   if (strength >= minStrength) {
+      finalSignal = "sell";
+      finalStrength = strengthShort;
+  }
 
-  const finalType = strength >= minStrength ? "sell" : "hold";
-
-  logMessage("info", `📉 TopGainersReversal: ${finalType} (strength: ${strength.toFixed(2)})`);
+  logMessage("info", `📉 TopGainersReversal: ${finalSignal} (strength: ${finalStrength})`);
 
   return { type: finalType, strength: parseFloat(strength.toFixed(4)) };
 };

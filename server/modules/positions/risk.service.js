@@ -1,5 +1,5 @@
 const { getWalletBalance } = require('../wallet/wallet.service');
-const { getConfig } = require('../../config/config');
+const { getConfig } = require('../../core/config');
 const { getMarketInfo } = require('../markets/markets.service'); // Pobieranie stepSize i minNotional
 const { getInstance } = require('../../api/binance.service');
 const { logMessage } = require('../../core/logging');

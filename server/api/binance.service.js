@@ -1,5 +1,5 @@
 const ccxt = require('ccxt');
-const { getConfig } = require('../config/config');
+const { getConfig } = require('../core/config');
 const { logMessage } = require('../core/logging');
 
 let binance = null;

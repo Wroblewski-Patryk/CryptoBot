@@ -1,4 +1,4 @@
-const { getConfig } = require('../../config/config');
+const { getConfig } = require('../../core/config');
 const { logMessage } = require('../../core/logging');
 const { getDCA } = require('./dca.service');
 
