@@ -1,0 +1,111 @@
+{
+  "loops": {
+    "markets": 2.5,
+    "wallet": 10,
+    "positions": 0.05,
+    "strategies": 10
+  },
+  "trading": {
+    "baseCurrency": "USDT",
+    "forbiddenCurrencies": ["USDC", "FDUSD", "HIPPO", "BTCDOM"],
+    "maxOpenPositions": 10,
+    "marketType": "future",
+    "contractType": "PERPETUAL",
+    
+    "risk": {
+      "perTrade": 1.5, 
+      "leverage": 10
+    },
+    "order":{
+      "type": "market",
+      "marginMode": "ISOLATED"
+    }
+  },
+  "tp": {
+    "enabled": false,
+    "percent": 100
+  },
+  "ttp": {
+    "enabled": true,
+    "starts": [ 5, 10, 20, 40, 80 ],
+    "steps": [ 2.5, 5, 10, 15, 25 ]
+  },
+  "dca": {
+    "enabled": true,
+    "percents": [ -10, -20, -30 ],
+    "times": 3,
+    "multiplier": 1
+  },
+  "tsl": {
+    "enabled": true,
+    "start": -15,
+    "step": 5
+  },
+  "sl": {
+    "enabled": false,
+    "percent": 60
+  },
+  "indicators": {
+    "intervals": {
+      "low": "15m",
+      "high": "2h"
+    },
+    "rsi": { 
+        "enabled": true, "weight": 1,
+        "period": 20, "overbought": 70, "oversold": 30 
+      },
+    "macd": { 
+      "enabled": true, "weight": 1.2,
+      "fastPeriod": 16, "slowPeriod": 32, "signalPeriod": 9 
+    },
+    "bollinger": { 
+      "enabled": true, "weight": 1,
+      "period": 30, "stdDev": 2.2 
+    },
+    "adx": { 
+      "enabled": true,  "weight": 0.8,
+      "period": 20, "threshold": 35 
+    },
+    "atr": { 
+      "enabled": true,  "weight": 0.5,
+      "period": 16, "multiplier": 1.5, 
+      "thresholdLow": 0.7, "thresholdHigh": 1.7 
+    },
+    "emaShort": { 
+      "enabled": true, "weight": 0.8,
+      "period": 16 
+    },
+    "emaLong": { 
+      "enabled": true, "weight": 0.8,
+      "period": 96 
+    },
+    "emaCross": { 
+      "enabled": true, "weight": 1.6,
+      "period": 16, "period2": 96 
+    },
+    "rejection": { "weight": 0.8 },
+    "falseCross": { "weight": 0.6 }
+  },
+
+  "strategies": {
+    "reversal": {
+      "enabled": true,
+      "minStrength": 0.56,
+      "indicators": ["rsi","macd", "bollinger", "adx", "atr"]
+    },
+    "trendFollowing": {
+      "enabled": true,
+      "minStrength": 0.62,
+      "indicators": ["emaShort", "emaLong", "macd", "adx", "rsi"]
+    },
+    "topGainersReversal": {
+      "enabled": false,
+      "min24hGain": 10,
+      "minStrength": 0.7,
+      "indicators": ["rsi", "macd", "emaShort", "emaLong"]
+    },
+    "ichimoku": {
+      "enabled": false
+    }
+  }
+}

@@ -1,0 +1,36 @@
+body{
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 16px;
+}
+
+p, span, a{
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
+}
+p{
+    font-size: 1rem;
+    color: var(--color-emerald-50);
+}
+span{
+    font-size: 0.875rem;
+}
+h1, h2, h3, h4{
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 500;
+}
+h1{
+    font-size: 2.5rem;
+    color: var(--color-emerald-50);
+}
+h2{
+    font-size: 2rem;
+    color: var(--color-emerald-100);
+}
+h3{
+    font-size: 1.5rem;
+    color: var(--color-emerald-200);
+}
+h4{
+    font-size: 1.25rem;
+    color: var(--color-emerald-300);
+}
