@@ -115,7 +115,7 @@ const makePosition = async (order) => {
 };
 const apiGetSignals = async () => {
   const finalSignals = [];
-  if ( !signals.length ){
+  if ( signals.size === 0 ){
       return finalSignals;
   }
   const sortedSignals = Array.from(signals.entries()).sort((a, b) => b[1].strength - a[1].strength);
