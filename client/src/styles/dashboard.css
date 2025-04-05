@@ -36,4 +36,9 @@ header{
             }
         } 
     }
+    .group{
+        a{
+            font-family: 'Titillium Web', sans-serif;
+        }
+    }
 }
