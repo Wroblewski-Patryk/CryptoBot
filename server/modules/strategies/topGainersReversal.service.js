@@ -69,7 +69,7 @@ const checkSignal = async (marketData) => {
 
   logMessage("info", `📉 TopGainersReversal: ${finalSignal} (strength: ${finalStrength})`);
 
-  return { type: finalType, strength: parseFloat(strength.toFixed(4)) };
+  return { type: finalSignal, strength: parseFloat(strength.toFixed(4)) };
 };
 
 module.exports = { checkSignal };
