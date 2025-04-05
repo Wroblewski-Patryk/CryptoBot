@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from "react";
 import api from "@/src/lib/api";
-import StrategiesTable from "@/src/components/tableStrategies";
 import ProgressBar from "../../components/progressBar";
 import { WalletIcon } from '@heroicons/react/24/outline';
+import Table from "@/src/components/table";
 
 export default function Sidebar(){ 
     const [signals, setSignals] = useState([]);
@@ -27,6 +27,26 @@ export default function Sidebar(){
     let percent = wallet.usedBalance / wallet.totalBalance * 100;
     if (isNaN(percent)) percent = 0;
 
+    const columns = [
+        {
+          key: 'symbol',
+          label: 'Symbol',
+          render: (row) => <span>{row.symbol.replace('/USDT:USDT','')}</span>
+        },
+        { 
+          key: 'side', 
+          label: 'Side'
+        },
+        {
+          key: 'strength',
+          label: 'Strength'
+        },
+        {
+          key: 'strategy',
+          label: 'Strategy'
+        }
+      ];
+
     return(
         <div>
             <div className="flex items-center justify-between">
@@ -38,12 +58,12 @@ export default function Sidebar(){
             <ProgressBar percent={percent} />
             <hr className="mt-4"/> 
 
-            <h3 className="mt-4 mb-4">Signals from strategies <small>({signals.length})</small></h3>
-            {signals && signals.length > 0 ? (
-                <StrategiesTable signals={signals} />
-            ) : (
-                <p>No signals</p>
-            )}
+            <h3 className="mt-4 mb-4">Last signals <small>({signals.length})</small></h3>
+            <Table 
+                data={signals} 
+                columns={columns}
+                defaultSort={{ key: 'strength', direction: 'desc' }}
+                />
         </div>
     );
 }
