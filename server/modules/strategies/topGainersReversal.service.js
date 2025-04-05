@@ -64,12 +64,12 @@ const checkSignal = async (marketData) => {
   const minStrength = strategyConfig.minStrength ?? 0.5;
    if (strength >= minStrength) {
       finalSignal = "sell";
-      finalStrength = strengthShort;
+      finalStrength = strength.toFixed(4);
   }
 
   logMessage("info", `📉 TopGainersReversal: ${finalSignal} (strength: ${finalStrength})`);
 
-  return { type: finalSignal, strength: parseFloat(strength.toFixed(4)) };
+  return { type: finalSignal, strength: finalStrength };
 };
 
 module.exports = { checkSignal };
