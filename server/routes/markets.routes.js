@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const { apiGetMarkets } = require('../modules/markets/markets.service');
 
 // GET /api/positions

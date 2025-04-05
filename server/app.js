@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require("cors");
 const routes = require('./routes');
 const errorMiddleware = require('./core/errorMiddleware');
+require('dotenv').config();
 
 const { initializeBot } = require('./core/bot');
 
