@@ -1,6 +1,6 @@
 'use client';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, redirect } from 'next/navigation';
 import { login } from '../services/auth.service';
 import { useAuthStore } from '../store/authStore';
 import LoginForm from './auth/login/loginForm';
@@ -10,16 +10,19 @@ export default function Page() {
   const token = useAuthStore((state) => state.token);
   const restoreSession = useAuthStore((state) => state.restoreSession);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     restoreSession();
   }, []);
   
   useEffect(() => {
-    if (token) {
-      router.push('/dashboard');
+    if (!token && pathname !== '/') {
+      redirect ('/');
+    } else if (token && pathname === '/') {
+      redirect ('/dashboard');
     }
-  }, [token, router]);
+  }, [token, pathname, redirect ]);
 
   const handleLogin = async (form) => {
     try {

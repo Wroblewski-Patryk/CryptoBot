@@ -1,8 +1,7 @@
 'use client';
 import "../../styles/dashboard.css";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, redirect } from 'next/navigation';
 import { useAuthStore } from '@/src/store/authStore';
 
 import Sidebar from "./sidebar";
@@ -10,22 +9,8 @@ import Sidebar from "./sidebar";
 import { UserCircleIcon, Cog6ToothIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 
 export default function Layout({ children }) {
-  const token = useAuthStore((state) => state.token);
-  const restoreSession = useAuthStore((state) => state.restoreSession);
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
-
-  useEffect(() => {
-    restoreSession();
-  }, []);
-
-  useEffect(() => {
-    if (!token) {
-      router.replace('/'); 
-    }
-  }, [token, router]);
-
-  if (!token) return null;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
@@ -59,7 +44,7 @@ export default function Layout({ children }) {
               <button className="w-full text-left px-4 py-2 rounded hover:bg-emerald-800 cursor-pointer"
                 onClick={() => {
                   logout();
-                  router.push('/');
+                  redirect('/');
                 }}
               >
                 <ArrowRightStartOnRectangleIcon className="float-left w-4 h-4 mr-4 mt-1 align-middle"/> Logout

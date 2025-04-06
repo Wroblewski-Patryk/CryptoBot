@@ -3,7 +3,6 @@ const router = express.Router();
 
 const { apiGetMarkets } = require('../modules/markets/markets.service');
 
-// GET /api/positions
 router.get('/', async (req, res) => {
     try {
         const markets = await apiGetMarkets();
