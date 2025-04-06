@@ -2,6 +2,7 @@
   "loops": {
     "markets": 2.5,
     "wallet": 10,
+    "orders": 3,
     "positions": 0.05,
     "strategies": 10
   },
@@ -32,13 +33,13 @@
   },
   "dca": {
     "enabled": true,
-    "percents": [ -10, -20, -30 ],
-    "times": 3,
+    "percents": [ -10, -20, -30, -40 ],
+    "times": 4,
     "multiplier": 1
   },
   "tsl": {
     "enabled": true,
-    "start": -15,
+    "start": -20,
     "step": 5
   },
   "sl": {
@@ -95,13 +96,13 @@
     },
     "trendFollowing": {
       "enabled": true,
-      "minStrength": 0.62,
+      "minStrength": 0.60,
       "indicators": ["emaShort", "emaLong", "macd", "adx", "rsi"]
     },
     "topGainersReversal": {
-      "enabled": false,
+      "enabled": true,
       "min24hGain": 10,
-      "minStrength": 0.7,
+      "minStrength": 0.4,
       "indicators": ["rsi", "macd", "emaShort", "emaLong"]
     },
     "ichimoku": {

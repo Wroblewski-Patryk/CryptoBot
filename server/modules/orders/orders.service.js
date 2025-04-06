@@ -2,8 +2,52 @@ const { getInstance } = require('../../api/binance.service');
 const { getConfig } = require('../../core/config');
 const { logMessage } = require('../../core/logging');
 const { formatSymbolForBinance } = require('../../core/utils');
+const { getMarkets } = require('../markets/markets.service');
 
+let orders = [];
+let updateLastTime = 0;
+const updateTime = getConfig('loops.orders') * 60000;
 
+const updateOrders = async () => {
+    try {
+        orders.length = 0;
+        const binance = await getInstance();
+        const markets = await getMarkets();
+        for (const market of markets) {
+            const symbol = market.symbol;
+            const openOrders = await binance.fetchOpenOrders(symbol);
+            if (openOrders && openOrders.length > 0) {
+                for (const order of openOrders) {
+                    orders.push({
+                        symbol: symbol,
+                        status: order.status,
+                        type: order.type,
+                        side: order.side,
+                        amount: order.amount,
+                        id: order.id, // 💡 warto dodać identyfikator zlecenia
+                        price: order.price,
+                        filled: order.filled,
+                        remaining: order.remaining,
+                        datetime: order.datetime,
+                    });
+                }
+            }
+        }
+        updateLastTime = Date.now();
+        logMessage('info', `📌 Orders updated successfully ${orders.length} open orders`);
+        return orders;
+    } catch (error) {
+        logMessage('error', `❌ Error fetching order status: ${error.message}`);
+        return null;
+    }
+}
+const getOrders = async () => {
+    if (orders.length > 0 && Date.now() - updateLastTime < updateTime) {
+        logMessage('info', `♻️ Returning cached orders.`);
+        return orders;
+    }
+    return await updateOrders();
+}
 // 🔄 Funkcja tworząca zlecenia na Binance
 const createOrder = async (symbol, type, side, quantity, price = null) => {
     try {
@@ -49,53 +93,6 @@ const createOrder = async (symbol, type, side, quantity, price = null) => {
     }
 };
 
-// ❌ Anulowanie zlecenia
-const cancelOrder = async (symbol, orderId) => {
-    try {
-        const binance = await getInstance();
-        await binance.cancelOrder(orderId, symbol);
-        logMessage('success', `✅ Order ${orderId} canceled on ${symbol}`);
-    } catch (error) {
-        logMessage('error', `❌ Error canceling order ${orderId} on ${symbol}: ${error.message}`);
-    }
-};
-
-// 🔍 Pobieranie statusu otwartych zleceń
-const getOpenOrders = async (symbol) => {
-    try {
-        const binance = await getInstance();
-        const orders = await binance.fetchOpenOrders(symbol);
-        logMessage('info', `📊 Open orders for ${symbol}: ${JSON.stringify(orders)}`);
-        return orders;
-    } catch (error) {
-        logMessage('error', `❌ Error fetching open orders: ${error.message}`);
-        return [];
-    }
-};
-
-// 🔥 Sprawdzenie statusu zlecenia
-const getOrderStatus = async (symbol, orderId) => {
-    try {
-        const binance = await getInstance();
-        const order = await binance.fetchOrder(orderId, symbol);
-        logMessage('info', `📌 Order Status for ${symbol} (${orderId}): ${order.status}`);
-        return order.status;
-    } catch (error) {
-        logMessage('error', `❌ Error fetching order status: ${error.message}`);
-        return 'UNKNOWN';
-    }
-};
-const getOrders = async () => {
-    try {
-        const binance = await getInstance();
-        const orders = await binance.getOpenOrders();
-        logMessage('info', `📌 Orders ${orders}`);
-        return orders;
-    } catch (error) {
-        logMessage('error', `❌ Error fetching order status: ${error.message}`);
-        return null;
-    }
-}
 const setMarginMode = async (symbol) => {
     try {
         const binance = await getInstance();
@@ -135,10 +132,14 @@ const setLeverage = async (symbol, leverage) => {
         return false;
     }
 }
+const apiGetOrders = async () => {
+    logMessage('info', `📤 API: Returning ${orders.length} cached open orders`);
+    return [...orders]; 
+};
 module.exports = {
+    updateOrders,
+    getOrders,
     createOrder,
-    cancelOrder,
-    getOpenOrders,
-    getOrderStatus,
-    getOrders
+
+    apiGetOrders
 };

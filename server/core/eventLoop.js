@@ -1,7 +1,9 @@
 const { updateMarkets } = require('../modules/markets/markets.service');
 const { updateWallet } = require('../modules/wallet/wallet.service');
+const { updateOrders } = require('../modules/orders/orders.service');
 const { updatePositions } = require('../modules/positions/positions.service');
 const { evaluateStrategies } = require('../modules/strategies/strategies.service');
+
 const { logMessage } = require('./logging');
 const { getConfig } = require('../core/config');
 
@@ -9,6 +11,7 @@ const { getConfig } = require('../core/config');
 const eventLoops = [
     { name: 'Markets', action: updateMarkets, interval: getConfig('loops.markets') * 60000 },
     { name: 'Wallet', action: updateWallet, interval: getConfig('loops.wallet') * 60000 },
+    { name: 'Orders', action: updateOrders, interval: getConfig('loops.orders') * 60000 },
     { name: 'Positions', action: updatePositions, interval: getConfig('loops.positions') * 60000 },
     { name: 'Strategies', action: evaluateStrategies, interval: getConfig('loops.strategies') * 60000 }
 ];

@@ -1,13 +1,48 @@
 'use client';
 import { useEffect, useState } from "react";
+
 import api from "@/src/lib/api";
 import Table from "@/src/components/table";
 
 export default function DashboardPage() {
   const [positions, setPositions] = useState([]);
+  const [orders, setOrders] = useState([]);
+  useEffect(() => {
+    const fetchAll = () => {
+      api.get("/positions")
+        .then(res => setPositions(res.data))
+        .catch(console.error);
+      api.get("/orders")
+        .then(res => setOrders(res.data))
+        .catch(console.error);  
+    };
+  
+    fetchAll();
+    const interval = setInterval(fetchAll, 5 *1000); 
+  
+    return () => clearInterval(interval);
+  }, []);
 
-  const defaultSort = { key: 'profitPercent', direction: 'desc' }
-  const columns = [
+
+  const handleClick = async (symbol, side, amount) => {
+    if (!symbol || !side || !amount) {
+      return alert("Brakuje danych do zamknięcia pozycji.");
+    }
+
+    try {
+      const response = await api.post("/positions/close", {
+        symbol,
+        side,
+        amount
+      });
+      alert("Pozycja zamknięta ✅");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Błąd przy zamykaniu pozycji: " + err?.response?.data?.message || err.message);
+    }
+  };
+
+  const columnsPositions = [
     {
       key: 'side',
       label: 'Side',
@@ -92,28 +127,51 @@ export default function DashboardPage() {
       )
     }
   ];
-  
-  useEffect(() => {
-    const fetchAll = () => {
-      api.get("/positions")
-        .then(res => setPositions(res.data))
-        .catch(console.error);
-    };
-  
-    fetchAll();
-    const interval = setInterval(fetchAll, 5000); 
-  
-    return () => clearInterval(interval);
-  }, []);
+  const sortPositions = { key: 'profitPercent', direction: 'desc' }
 
+  const columnsOrders = [
+    {
+      key: 'symbol',
+      label: 'Symbol',
+      align: 'left'
+    },
+    
+    {
+      key: 'status',
+      label: 'Status',
+      align: 'left'
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      align: 'left'
+    },
+    {
+      key: 'side',
+      label: 'Side',
+      align: 'left'
+    },
+    {
+      key: 'amount',
+      label: 'Amount',
+      align: 'right',
+    }
+  ];
   return (
     <div>
       <h2 className="mb-4">Open positions <small>({positions.length})</small></h2>
       <Table 
         data={positions} 
-        columns={columns}
-        defaultSort={{ key: 'profitPercent', direction: 'desc' }}
+        columns={columnsPositions}
+        defaultSort={sortPositions}
         />
+
+      <h2 className="mb-4 mt-4">Open orders <small>({orders.length})</small></h2>
+      <Table 
+        data={orders} 
+        columns={columnsOrders}
+        />
+
     </div>
   );
 }
